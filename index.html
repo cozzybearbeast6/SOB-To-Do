@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Tasks</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border: #333333;
+            --accent: #00ff88;
+            --star: #ffd700;
+            --green: #00ff88;
+            --red: #ff4444;
+            --yellow: #ffbb00;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .task-input-wrapper {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        #taskInput {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 16px 20px;
+            font-size: 16px;
+            font-family: 'DM Sans', sans-serif;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        #taskInput:focus {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+        }
+
+        #taskInput::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            padding: 16px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s ease;
+            min-height: 54px;
+            touch-action: manipulation;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+        }
+
+        .marker-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .marker-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .marker-btn {
+            width: 48px;
+            height: 48px;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .marker-btn:active {
+            transform: scale(0.9);
+        }
+
+        .marker-btn.active {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .marker-btn.active::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            opacity: 0.3;
+        }
+
+        .marker-icon {
+            font-size: 24px;
+        }
+
+        .marker-icon.star {
+            color: var(--star);
+        }
+
+        .marker-icon.green {
+            width: 20px;
+            height: 20px;
+            background: var(--green);
+            border-radius: 50%;
+        }
+
+        .marker-icon.red {
+            width: 20px;
+            height: 20px;
+            background: var(--red);
+            border-radius: 4px;
+        }
+
+        .marker-icon.yellow {
+            width: 20px;
+            height: 20px;
+            background: var(--yellow);
+            border-radius: 4px;
+        }
+
+        .filter-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .filter-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn:active {
+            transform: scale(0.95);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .filter-btn .marker-icon {
+            font-size: 16px;
+        }
+
+        .filter-btn .marker-icon.green,
+        .filter-btn .marker-icon.red,
+        .filter-btn .marker-icon.yellow {
+            width: 14px;
+            height: 14px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .task-list {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+
+        .task-item {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: move;
+            touch-action: none;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: transparent;
+            transition: background 0.2s ease;
+        }
+
+        .task-item.has-star::before { background: var(--star); }
+        .task-item.has-green::before { background: var(--green); }
+        .task-item.has-red::before { background: var(--red); }
+        .task-item.has-yellow::before { background: var(--yellow); }
+
+        .task-item:active {
+            transform: scale(0.98);
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+
+        .task-item.sortable-ghost {
+            opacity: 0.3;
+        }
+
+        .task-item.sortable-drag {
+            box-shadow: 0 12px 32px var(--shadow);
+            transform: rotate(2deg);
+        }
+
+        .drag-handle {
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .task-marker {
+            font-size: 20px;
+            min-width: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-marker .marker-icon {
+            font-size: 20px;
+        }
+
+        .task-marker .marker-icon.green,
+        .task-marker .marker-icon.red,
+        .task-marker .marker-icon.yellow {
+            width: 16px;
+            height: 16px;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .task-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .task-btn:active {
+            transform: scale(0.9);
+        }
+
+        .task-btn.complete-btn:hover {
+            background: var(--green);
+            border-color: var(--green);
+            color: var(--bg-primary);
+        }
+
+        .task-btn.delete-btn:hover {
+            background: var(--red);
+            border-color: var(--red);
+            color: var(--bg-primary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-item {
+            animation: slideIn 0.3s ease;
+        }
+
+        @media (max-width: 600px) {
+            .app-container {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 36px;
+            }
+
+            .task-input-wrapper {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Tasks</h1>
+            <div class="subtitle">Your personal organizer</div>
+        </header>
+
+        <div class="input-section">
+            <div class="task-input-wrapper">
+                <input 
+                    type="text" 
+                    id="taskInput" 
+                    placeholder="Add a new task..."
+                    autocomplete="off"
+                >
+                <button class="btn" onclick="addTask()">Add</button>
+            </div>
+
+            <div class="marker-label">Mark as:</div>
+            <div class="marker-selector">
+                <button class="marker-btn" data-marker="none" onclick="selectMarker('none')">
+                    <div class="marker-icon">—</div>
+                </button>
+                <button class="marker-btn" data-marker="star" onclick="selectMarker('star')">
+                    <div class="marker-icon star">★</div>
+                </button>
+                <button class="marker-btn" data-marker="green" onclick="selectMarker('green')">
+                    <div class="marker-icon green"></div>
+                </button>
+                <button class="marker-btn" data-marker="red" onclick="selectMarker('red')">
+                    <div class="marker-icon red"></div>
+                </button>
+                <button class="marker-btn" data-marker="yellow" onclick="selectMarker('yellow')">
+                    <div class="marker-icon yellow"></div>
+                </button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('active')">Active</button>
+            <button class="tab" onclick="switchTab('completed')">Completed</button>
+        </div>
+
+        <div id="activeTab" class="tab-content active">
+            <div class="filter-section">
+                <div class="filter-label">Filter by marker:</div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="setFilter('all')">All</button>
+                    <button class="filter-btn" onclick="setFilter('star')">
+                        <span class="marker-icon star">★</span>
+                        Starred
+                    </button>
+                    <button class="filter-btn" onclick="setFilter('green')">
+                        <span class="marker-icon green"></span>
+                        Green
+                    </button>
+                    <button class="filter-btn" onclick="setFilter('red')">
+                        <span class="marker-icon red"></span>
+                        Red
+                    </button>
+                    <button class="filter-btn" onclick="setFilter('yellow')">
+                        <span class="marker-icon yellow"></span>
+                        Yellow
+                    </button>
+                </div>
+            </div>
+
+            <div class="section-title">To Do</div>
+            <ul id="taskList" class="task-list"></ul>
+        </div>
+
+        <div id="completedTab" class="tab-content">
+            <div class="section-title">Completed</div>
+            <ul id="completedList" class="task-list"></ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let selectedMarker = 'none';
+        let currentFilter = 'all';
+        let currentTab = 'active';
+
+        // Initialize SortableJS for drag and drop
+        let sortable;
+
+        function initSortable() {
+            const taskList = document.getElementById('taskList');
+            if (sortable) {
+                sortable.destroy();
+            }
+            sortable = new Sortable(taskList, {
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                handle: '.drag-handle',
+                onEnd: function() {
+                    updateTaskOrder();
+                }
+            });
+        }
+
+        function updateTaskOrder() {
+            const taskList = document.getElementById('taskList');
+            const taskItems = taskList.querySelectorAll('.task-item');
+            
+            taskItems.forEach((item, index) => {
+                const taskId = parseInt(item.dataset.id);
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.order = index;
+                }
+            });
+            
+            saveTasks();
+        }
+
+        function selectMarker(marker) {
+            selectedMarker = marker;
+            document.querySelectorAll('.marker-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-marker="${marker}"]`).classList.add('active');
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.filter-btn').classList.add('active');
+            renderTasks();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+            
+            renderTasks();
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            const task = {
+                id: Date.now(),
+                text: text,
+                marker: selectedMarker === 'none' ? null : selectedMarker,
+                completed: false,
+                order: tasks.filter(t => !t.completed).length
+            };
+            
+            tasks.push(task);
+            saveTasks();
+            renderTasks();
+            
+            input.value = '';
+            selectMarker('none');
+        }
+
+        function completeTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = true;
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function getMarkerHTML(marker) {
+            if (!marker) return '';
+            
+            const icons = {
+                star: '<span class="marker-icon star">★</span>',
+                green: '<span class="marker-icon green"></span>',
+                red: '<span class="marker-icon red"></span>',
+                yellow: '<span class="marker-icon yellow"></span>'
+            };
+            
+            return `<div class="task-marker">${icons[marker]}</div>`;
+        }
+
+        function renderTasks() {
+            const activeList = document.getElementById('taskList');
+            const completedList = document.getElementById('completedList');
+            
+            // Filter active tasks
+            let activeTasks = tasks.filter(t => !t.completed);
+            
+            if (currentFilter !== 'all') {
+                activeTasks = activeTasks.filter(t => t.marker === currentFilter);
+            }
+            
+            activeTasks.sort((a, b) => a.order - b.order);
+            
+            // Filter completed tasks
+            const completedTasks = tasks.filter(t => t.completed);
+            completedTasks.sort((a, b) => b.id - a.id);
+            
+            // Render active tasks
+            if (activeTasks.length === 0) {
+                activeList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✓</div>
+                        <div class="empty-state-text">No tasks yet. Add one above!</div>
+                    </div>
+                `;
+            } else {
+                activeList.innerHTML = activeTasks.map(task => `
+                    <li class="task-item ${task.marker ? 'has-' + task.marker : ''}" data-id="${task.id}">
+                        <div class="drag-handle">⋮⋮</div>
+                        ${getMarkerHTML(task.marker)}
+                        <div class="task-text">${task.text}</div>
+                        <div class="task-actions">
+                            <button class="task-btn complete-btn" onclick="completeTask(${task.id})" title="Complete">✓</button>
+                            <button class="task-btn delete-btn" onclick="deleteTask(${task.id})" title="Delete">✕</button>
+                        </div>
+                    </li>
+                `).join('');
+                
+                initSortable();
+            }
+            
+            // Render completed tasks
+            if (completedTasks.length === 0) {
+                completedList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">No completed tasks yet.</div>
+                    </div>
+                `;
+            } else {
+                completedList.innerHTML = completedTasks.map(task => `
+                    <li class="task-item ${task.marker ? 'has-' + task.marker : ''}" data-id="${task.id}">
+                        ${getMarkerHTML(task.marker)}
+                        <div class="task-text completed">${task.text}</div>
+                        <div class="task-actions">
+                            <button class="task-btn delete-btn" onclick="deleteTask(${task.id})" title="Delete">✕</button>
+                        </div>
+                    </li>
+                `).join('');
+            }
+        }
+
+        // Add task on Enter key
+        document.getElementById('taskInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Initialize marker selector
+        selectMarker('none');
+
+        // Initial render
+        renderTasks();
+
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        }
+    </script>
+</body>
+</html>
