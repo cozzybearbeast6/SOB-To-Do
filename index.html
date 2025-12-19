@@ -13,18 +13,19 @@
     
     <style>
         :root {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #1a1a1a;
-            --bg-tertiary: #252525;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --border: #333333;
-            --accent: #00ff88;
-            --star: #ffd700;
-            --green: #00ff88;
-            --red: #ff4444;
-            --yellow: #ffbb00;
-            --shadow: rgba(0, 0, 0, 0.5);
+            --paper-cream: #faf8f3;
+            --paper-line: #d4c5b9;
+            --margin-line: #e8b4b8;
+            --text-primary: #2c2c2c;
+            --text-secondary: #6b6b6b;
+            --text-light: #9b9b9b;
+            --accent: #5b8ec4;
+            --star: #ffc107;
+            --green: #4caf50;
+            --red: #ef5350;
+            --yellow: #ffb74d;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --line-height: 32px;
         }
 
         * {
@@ -36,148 +37,168 @@
 
         body {
             font-family: 'DM Sans', -apple-system, sans-serif;
-            background: var(--bg-primary);
+            background: #e8e5de;
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: var(--line-height);
             overflow-x: hidden;
             min-height: 100vh;
+            padding: 20px;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
         .app-container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        header {
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        h1 {
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .input-section {
-            margin-bottom: 30px;
-        }
-
-        .task-input-wrapper {
+            background: var(--paper-cream);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-height: calc(100vh - 40px);
+            position: relative;
+            padding: 0;
             display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
+            flex-direction: column;
         }
 
-        #taskInput {
+        /* Top toolbar */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            background: rgba(250, 248, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--paper-line);
+            padding: 12px 20px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            z-index: 100;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--paper-line);
+        }
+
+        /* Paper content area */
+        .paper-content {
             flex: 1;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            color: var(--text-primary);
-            padding: 16px 20px;
-            font-size: 16px;
-            font-family: 'DM Sans', sans-serif;
-            border-radius: 12px;
-            outline: none;
-            transition: all 0.2s ease;
+            position: relative;
+            padding: 40px 40px 40px 80px;
         }
 
-        #taskInput:focus {
-            border-color: var(--accent);
-            background: var(--bg-tertiary);
-            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+        /* Lined paper effect */
+        .paper-content::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                transparent,
+                transparent calc(var(--line-height) - 1px),
+                var(--paper-line) calc(var(--line-height) - 1px),
+                var(--paper-line) var(--line-height)
+            );
+            pointer-events: none;
+            z-index: 0;
         }
 
-        #taskInput::placeholder {
-            color: var(--text-secondary);
+        /* Left margin line (red line on legal pad) */
+        .paper-content::after {
+            content: '';
+            position: absolute;
+            left: 60px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--margin-line);
+            pointer-events: none;
+            z-index: 1;
         }
 
-        .btn {
-            background: var(--accent);
-            color: var(--bg-primary);
+        /* Ensure content is above the lines */
+        .paper-content > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Inline task input that appears where you click */
+        .inline-input-wrapper {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: none;
+            z-index: 50;
+        }
+
+        .inline-input-wrapper.active {
+            display: block;
+        }
+
+        #inlineTaskInput {
+            background: transparent;
             border: none;
-            padding: 16px 28px;
+            border-bottom: 1px solid var(--accent);
+            color: var(--text-primary);
+            padding: 2px 4px;
             font-size: 16px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
             font-family: 'DM Sans', sans-serif;
-            transition: all 0.2s ease;
-            min-height: 54px;
-            touch-action: manipulation;
+            outline: none;
+            min-width: 200px;
+            line-height: calc(var(--line-height) - 12px);
         }
 
-        .btn:active {
-            transform: scale(0.96);
-            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+        #inlineTaskInput::placeholder {
+            color: var(--text-light);
+        }
+
+        .toolbar-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
         }
 
         .marker-selector {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .marker-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 8px;
-            font-weight: 500;
+            gap: 6px;
         }
 
         .marker-btn {
-            width: 48px;
-            height: 48px;
-            border: 2px solid var(--border);
-            background: var(--bg-secondary);
-            border-radius: 10px;
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--paper-line);
+            background: white;
+            border-radius: 6px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
             position: relative;
+            box-shadow: 0 1px 2px var(--shadow);
         }
 
         .marker-btn:active {
-            transform: scale(0.9);
+            transform: scale(0.95);
         }
 
         .marker-btn.active {
             border-color: var(--accent);
-            background: var(--bg-tertiary);
-        }
-
-        .marker-btn.active::after {
-            content: '';
-            position: absolute;
-            inset: -4px;
-            border: 2px solid var(--accent);
-            border-radius: 12px;
-            opacity: 0.3;
+            background: rgba(91, 142, 196, 0.15);
+            box-shadow: 0 1px 3px rgba(91, 142, 196, 0.3);
         }
 
         .marker-icon {
-            font-size: 24px;
+            font-size: 16px;
         }
 
         .marker-icon.star {
@@ -185,62 +206,40 @@
         }
 
         .marker-icon.green {
-            width: 20px;
-            height: 20px;
+            width: 14px;
+            height: 14px;
             background: var(--green);
             border-radius: 50%;
         }
 
         .marker-icon.red {
-            width: 20px;
-            height: 20px;
+            width: 14px;
+            height: 14px;
             background: var(--red);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .marker-icon.yellow {
-            width: 20px;
-            height: 20px;
+            width: 14px;
+            height: 14px;
             background: var(--yellow);
-            border-radius: 4px;
-        }
-
-        .filter-section {
-            margin-bottom: 24px;
-            padding: 16px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .filter-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 12px;
-            font-weight: 500;
-        }
-
-        .filter-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+            border-radius: 3px;
         }
 
         .filter-btn {
-            padding: 8px 16px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 5px 10px;
+            background: white;
+            border: 1px solid var(--paper-line);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
+            box-shadow: 0 1px 2px var(--shadow);
         }
 
         .filter-btn:active {
@@ -249,38 +248,19 @@
 
         .filter-btn.active {
             background: var(--accent);
-            color: var(--bg-primary);
+            color: white;
             border-color: var(--accent);
         }
 
         .filter-btn .marker-icon {
-            font-size: 16px;
+            font-size: 12px;
         }
 
         .filter-btn .marker-icon.green,
         .filter-btn .marker-icon.red,
         .filter-btn .marker-icon.yellow {
-            width: 14px;
-            height: 14px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
+            width: 10px;
+            height: 10px;
         }
 
         .task-list {
@@ -289,28 +269,30 @@
         }
 
         .task-item {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 12px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid transparent;
+            padding: 6px 0;
+            margin-bottom: 0;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             cursor: move;
             touch-action: none;
             transition: all 0.2s ease;
             position: relative;
-            overflow: hidden;
+            min-height: var(--line-height);
         }
 
         .task-item::before {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
             background: transparent;
             transition: background 0.2s ease;
         }
@@ -320,9 +302,8 @@
         .task-item.has-red::before { background: var(--red); }
         .task-item.has-yellow::before { background: var(--yellow); }
 
-        .task-item:active {
-            transform: scale(0.98);
-            box-shadow: 0 8px 24px var(--shadow);
+        .task-item:hover {
+            background: rgba(91, 142, 196, 0.05);
         }
 
         .task-item.sortable-ghost {
@@ -330,40 +311,47 @@
         }
 
         .task-item.sortable-drag {
-            box-shadow: 0 12px 32px var(--shadow);
-            transform: rotate(2deg);
+            background: white;
+            box-shadow: 0 4px 12px var(--shadow);
+            transform: rotate(1deg);
+            border-radius: 4px;
         }
 
         .drag-handle {
-            color: var(--text-secondary);
-            font-size: 20px;
+            color: var(--text-light);
+            font-size: 14px;
             cursor: grab;
             touch-action: none;
             user-select: none;
             line-height: 1;
+            opacity: 0.5;
         }
 
         .drag-handle:active {
             cursor: grabbing;
         }
 
+        .task-item:hover .drag-handle {
+            opacity: 1;
+        }
+
         .task-marker {
-            font-size: 20px;
-            min-width: 24px;
+            font-size: 16px;
+            min-width: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .task-marker .marker-icon {
-            font-size: 20px;
+            font-size: 16px;
         }
 
         .task-marker .marker-icon.green,
         .task-marker .marker-icon.red,
         .task-marker .marker-icon.yellow {
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
         }
 
         .task-text {
@@ -371,70 +359,75 @@
             font-size: 16px;
             color: var(--text-primary);
             word-break: break-word;
+            line-height: calc(var(--line-height) - 12px);
         }
 
         .task-text.completed {
             text-decoration: line-through;
-            color: var(--text-secondary);
+            color: var(--text-light);
         }
 
         .task-actions {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .task-item:hover .task-actions {
+            opacity: 1;
         }
 
         .task-btn {
-            width: 40px;
-            height: 40px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 1px solid var(--paper-line);
+            border-radius: 6px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 14px;
             transition: all 0.2s ease;
             touch-action: manipulation;
+            box-shadow: 0 1px 2px var(--shadow);
         }
 
         .task-btn:active {
-            transform: scale(0.9);
+            transform: scale(0.95);
         }
 
         .task-btn.complete-btn:hover {
             background: var(--green);
             border-color: var(--green);
-            color: var(--bg-primary);
+            color: white;
         }
 
         .task-btn.delete-btn:hover {
             background: var(--red);
             border-color: var(--red);
-            color: var(--bg-primary);
+            color: white;
         }
 
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: var(--bg-secondary);
-            padding: 6px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 3px;
+            border-radius: 6px;
+            border: 1px solid var(--paper-line);
         }
 
         .tab {
-            flex: 1;
-            padding: 12px 20px;
+            padding: 5px 12px;
             background: transparent;
             border: none;
             color: var(--text-secondary);
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-radius: 8px;
+            letter-spacing: 0.02em;
+            border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'DM Sans', sans-serif;
@@ -442,7 +435,8 @@
 
         .tab.active {
             background: var(--accent);
-            color: var(--bg-primary);
+            color: white;
+            box-shadow: 0 1px 2px var(--shadow);
         }
 
         .tab-content {
@@ -455,25 +449,26 @@
 
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
+            padding: 64px 20px;
+            color: var(--text-light);
         }
 
         .empty-state-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
+            font-size: 48px;
+            margin-bottom: 12px;
             opacity: 0.3;
         }
 
         .empty-state-text {
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 15px;
+            font-weight: 400;
+            line-height: var(--line-height);
         }
 
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
@@ -482,102 +477,137 @@
         }
 
         .task-item {
-            animation: slideIn 0.3s ease;
+            animation: slideIn 0.2s ease;
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
             .app-container {
-                padding: 16px;
+                min-height: calc(100vh - 20px);
             }
 
-            h1 {
-                font-size: 36px;
+            .paper-content {
+                padding: 30px 20px 30px 50px;
             }
 
-            .task-input-wrapper {
-                flex-direction: column;
+            .paper-content::after {
+                left: 40px;
             }
 
-            .btn {
-                width: 100%;
+            .toolbar {
+                padding: 10px;
+                gap: 8px;
             }
+
+            .toolbar-label {
+                display: none;
+            }
+
+            .task-actions {
+                opacity: 1;
+            }
+        }
+
+        /* Touch devices - always show actions */
+        @media (hover: none) {
+            .task-actions {
+                opacity: 1;
+            }
+
+            .drag-handle {
+                opacity: 1;
+            }
+        }
+
+        /* Click-to-write cursor */
+        .paper-content {
+            cursor: text;
+        }
+
+        .paper-content.has-tasks {
+            cursor: default;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <header>
-            <h1>Tasks</h1>
-            <div class="subtitle">Your personal organizer</div>
-        </header>
-
-        <div class="input-section">
-            <div class="task-input-wrapper">
-                <input 
-                    type="text" 
-                    id="taskInput" 
-                    placeholder="Add a new task..."
-                    autocomplete="off"
-                >
-                <button class="btn" onclick="addTask()">Add</button>
+        <!-- Top Toolbar -->
+        <div class="toolbar">
+            <!-- Tabs -->
+            <div class="toolbar-section tabs">
+                <button class="tab active" onclick="switchTab('active')">Active</button>
+                <button class="tab" onclick="switchTab('completed')">Completed</button>
             </div>
 
-            <div class="marker-label">Mark as:</div>
-            <div class="marker-selector">
-                <button class="marker-btn" data-marker="none" onclick="selectMarker('none')">
-                    <div class="marker-icon">—</div>
-                </button>
-                <button class="marker-btn" data-marker="star" onclick="selectMarker('star')">
-                    <div class="marker-icon star">★</div>
-                </button>
-                <button class="marker-btn" data-marker="green" onclick="selectMarker('green')">
-                    <div class="marker-icon green"></div>
-                </button>
-                <button class="marker-btn" data-marker="red" onclick="selectMarker('red')">
-                    <div class="marker-icon red"></div>
-                </button>
-                <button class="marker-btn" data-marker="yellow" onclick="selectMarker('yellow')">
-                    <div class="marker-icon yellow"></div>
-                </button>
-            </div>
-        </div>
+            <div class="toolbar-divider"></div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('active')">Active</button>
-            <button class="tab" onclick="switchTab('completed')">Completed</button>
-        </div>
-
-        <div id="activeTab" class="tab-content active">
-            <div class="filter-section">
-                <div class="filter-label">Filter by marker:</div>
-                <div class="filter-buttons">
-                    <button class="filter-btn active" onclick="setFilter('all')">All</button>
-                    <button class="filter-btn" onclick="setFilter('star')">
-                        <span class="marker-icon star">★</span>
-                        Starred
+            <!-- Markers -->
+            <div class="toolbar-section">
+                <span class="toolbar-label">Mark:</span>
+                <div class="marker-selector">
+                    <button class="marker-btn active" data-marker="none" onclick="selectMarker('none')" title="No marker">
+                        <div class="marker-icon">—</div>
                     </button>
-                    <button class="filter-btn" onclick="setFilter('green')">
-                        <span class="marker-icon green"></span>
-                        Green
+                    <button class="marker-btn" data-marker="star" onclick="selectMarker('star')" title="Star">
+                        <div class="marker-icon star">★</div>
                     </button>
-                    <button class="filter-btn" onclick="setFilter('red')">
-                        <span class="marker-icon red"></span>
-                        Red
+                    <button class="marker-btn" data-marker="green" onclick="selectMarker('green')" title="Green">
+                        <div class="marker-icon green"></div>
                     </button>
-                    <button class="filter-btn" onclick="setFilter('yellow')">
-                        <span class="marker-icon yellow"></span>
-                        Yellow
+                    <button class="marker-btn" data-marker="red" onclick="selectMarker('red')" title="Red">
+                        <div class="marker-icon red"></div>
+                    </button>
+                    <button class="marker-btn" data-marker="yellow" onclick="selectMarker('yellow')" title="Yellow">
+                        <div class="marker-icon yellow"></div>
                     </button>
                 </div>
             </div>
 
-            <div class="section-title">To Do</div>
-            <ul id="taskList" class="task-list"></ul>
+            <div class="toolbar-divider"></div>
+
+            <!-- Filters -->
+            <div class="toolbar-section">
+                <span class="toolbar-label">Filter:</span>
+                <button class="filter-btn active" onclick="setFilter('all')">All</button>
+                <button class="filter-btn" onclick="setFilter('star')">
+                    <span class="marker-icon star">★</span>
+                </button>
+                <button class="filter-btn" onclick="setFilter('green')">
+                    <span class="marker-icon green"></span>
+                </button>
+                <button class="filter-btn" onclick="setFilter('red')">
+                    <span class="marker-icon red"></span>
+                </button>
+                <button class="filter-btn" onclick="setFilter('yellow')">
+                    <span class="marker-icon yellow"></span>
+                </button>
+            </div>
         </div>
 
-        <div id="completedTab" class="tab-content">
-            <div class="section-title">Completed</div>
-            <ul id="completedList" class="task-list"></ul>
+        <!-- Paper Content Area -->
+        <div class="paper-content" id="paperContent">
+            <!-- Inline input that appears where you click -->
+            <div class="inline-input-wrapper" id="inlineInputWrapper">
+                <input
+                    type="text"
+                    id="inlineTaskInput"
+                    placeholder="Type your task..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- Active Tasks Tab -->
+            <div id="activeTab" class="tab-content active">
+                <ul id="taskList" class="task-list"></ul>
+            </div>
+
+            <!-- Completed Tasks Tab -->
+            <div id="completedTab" class="tab-content">
+                <ul id="completedList" class="task-list"></ul>
+            </div>
         </div>
     </div>
 
@@ -587,6 +617,7 @@
         let selectedMarker = 'none';
         let currentFilter = 'all';
         let currentTab = 'active';
+        let isInputActive = false;
 
         // Initialize SortableJS for drag and drop
         let sortable;
@@ -610,7 +641,7 @@
         function updateTaskOrder() {
             const taskList = document.getElementById('taskList');
             const taskItems = taskList.querySelectorAll('.task-item');
-            
+
             taskItems.forEach((item, index) => {
                 const taskId = parseInt(item.dataset.id);
                 const task = tasks.find(t => t.id === taskId);
@@ -618,7 +649,7 @@
                     task.order = index;
                 }
             });
-            
+
             saveTasks();
         }
 
@@ -643,19 +674,50 @@
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
+
             event.target.classList.add('active');
             document.getElementById(tab + 'Tab').classList.add('active');
-            
+
             renderTasks();
         }
 
-        function addTask() {
-            const input = document.getElementById('taskInput');
-            const text = input.value.trim();
-            
-            if (!text) return;
-            
+        // Click-to-write functionality
+        const paperContent = document.getElementById('paperContent');
+        const inlineInputWrapper = document.getElementById('inlineInputWrapper');
+        const inlineInput = document.getElementById('inlineTaskInput');
+
+        paperContent.addEventListener('click', function(e) {
+            // Don't activate if clicking on existing tasks or input
+            if (e.target.closest('.task-item') || e.target.closest('.inline-input-wrapper')) {
+                return;
+            }
+
+            // If we're on completed tab and there are no tasks, show input
+            // If we're on active tab, always allow adding
+            if (currentTab === 'completed' && tasks.filter(t => t.completed).length > 0) {
+                return;
+            }
+
+            // Position the input where clicked
+            const rect = paperContent.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            inlineInputWrapper.style.left = x + 'px';
+            inlineInputWrapper.style.top = y + 'px';
+            inlineInputWrapper.classList.add('active');
+            inlineInput.focus();
+            isInputActive = true;
+        });
+
+        function addTaskFromInline() {
+            const text = inlineInput.value.trim();
+
+            if (!text) {
+                hideInlineInput();
+                return;
+            }
+
             const task = {
                 id: Date.now(),
                 text: text,
@@ -663,14 +725,46 @@
                 completed: false,
                 order: tasks.filter(t => !t.completed).length
             };
-            
+
             tasks.push(task);
             saveTasks();
             renderTasks();
-            
-            input.value = '';
+
+            inlineInput.value = '';
+            hideInlineInput();
             selectMarker('none');
         }
+
+        function hideInlineInput() {
+            inlineInputWrapper.classList.remove('active');
+            isInputActive = false;
+        }
+
+        // Handle Enter key on inline input
+        inlineInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTaskFromInline();
+            }
+        });
+
+        // Handle Escape key to cancel
+        inlineInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                inlineInput.value = '';
+                hideInlineInput();
+            }
+        });
+
+        // Hide input when clicking outside
+        document.addEventListener('click', function(e) {
+            if (isInputActive && !e.target.closest('.inline-input-wrapper') && !e.target.closest('.paper-content')) {
+                if (inlineInput.value.trim()) {
+                    addTaskFromInline();
+                } else {
+                    hideInlineInput();
+                }
+            }
+        });
 
         function completeTask(id) {
             const task = tasks.find(t => t.id === id);
@@ -707,28 +801,35 @@
         function renderTasks() {
             const activeList = document.getElementById('taskList');
             const completedList = document.getElementById('completedList');
-            
+
             // Filter active tasks
             let activeTasks = tasks.filter(t => !t.completed);
-            
+
             if (currentFilter !== 'all') {
                 activeTasks = activeTasks.filter(t => t.marker === currentFilter);
             }
-            
+
             activeTasks.sort((a, b) => a.order - b.order);
-            
+
             // Filter completed tasks
-            const completedTasks = tasks.filter(t => t.completed);
+            let completedTasks = tasks.filter(t => t.completed);
+
+            if (currentFilter !== 'all') {
+                completedTasks = completedTasks.filter(t => t.marker === currentFilter);
+            }
+
             completedTasks.sort((a, b) => b.id - a.id);
-            
+
+            // Update cursor style based on whether there are tasks
+            if (activeTasks.length === 0 && currentTab === 'active') {
+                paperContent.classList.remove('has-tasks');
+            } else {
+                paperContent.classList.add('has-tasks');
+            }
+
             // Render active tasks
             if (activeTasks.length === 0) {
-                activeList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">✓</div>
-                        <div class="empty-state-text">No tasks yet. Add one above!</div>
-                    </div>
-                `;
+                activeList.innerHTML = '';
             } else {
                 activeList.innerHTML = activeTasks.map(task => `
                     <li class="task-item ${task.marker ? 'has-' + task.marker : ''}" data-id="${task.id}">
@@ -741,18 +842,13 @@
                         </div>
                     </li>
                 `).join('');
-                
+
                 initSortable();
             }
-            
+
             // Render completed tasks
             if (completedTasks.length === 0) {
-                completedList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <div class="empty-state-text">No completed tasks yet.</div>
-                    </div>
-                `;
+                completedList.innerHTML = '';
             } else {
                 completedList.innerHTML = completedTasks.map(task => `
                     <li class="task-item ${task.marker ? 'has-' + task.marker : ''}" data-id="${task.id}">
@@ -765,13 +861,6 @@
                 `).join('');
             }
         }
-
-        // Add task on Enter key
-        document.getElementById('taskInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addTask();
-            }
-        });
 
         // Initialize marker selector
         selectMarker('none');
