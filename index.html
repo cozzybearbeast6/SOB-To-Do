@@ -686,7 +686,8 @@
         const inlineInputWrapper = document.getElementById('inlineInputWrapper');
         const inlineInput = document.getElementById('inlineTaskInput');
 
-        paperContent.addEventListener('click', function(e) {
+        // Handle both click (finger/mouse) and pointerdown (Apple Pencil)
+        function activateInputAt(e) {
             // Don't activate if clicking on existing tasks or input
             if (e.target.closest('.task-item') || e.target.closest('.inline-input-wrapper')) {
                 return;
@@ -698,7 +699,7 @@
                 return;
             }
 
-            // Position the input where clicked
+            // Position the input where clicked/touched
             const rect = paperContent.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -708,6 +709,24 @@
             inlineInputWrapper.classList.add('active');
             inlineInput.focus();
             isInputActive = true;
+        }
+
+        // Handle Apple Pencil - activate immediately on pencil touch
+        paperContent.addEventListener('pointerdown', function(e) {
+            // Only handle Apple Pencil input (pen type)
+            if (e.pointerType === 'pen') {
+                e.preventDefault(); // Prevent default to avoid double-triggering
+                activateInputAt(e);
+            }
+        });
+
+        // Handle regular clicks (finger/mouse)
+        paperContent.addEventListener('click', function(e) {
+            // Don't handle if this was already handled by pointerdown (Apple Pencil)
+            if (e.pointerType === 'pen') {
+                return;
+            }
+            activateInputAt(e);
         });
 
         function addTaskFromInline() {
