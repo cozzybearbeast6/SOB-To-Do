@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c192" width="192" height="192"></canvas>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function drawIcon(canvas, size) {
+    const ctx = canvas.getContext('2d');
+    // Cream background
+    ctx.fillStyle = '#faf8f3';
+    ctx.fillRect(0, 0, size, size);
+    
+    // Draw lined paper effect
+    ctx.strokeStyle = '#d4c5b9';
+    ctx.lineWidth = 2;
+    for (let y = 40; y < size; y += 32) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(size, y);
+        ctx.stroke();
+    }
+    
+    // Red margin line
+    ctx.strokeStyle = '#e8b4b8';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.15, 0);
+    ctx.lineTo(size * 0.15, size);
+    ctx.stroke();
+    
+    // Draw checkmarks
+    ctx.strokeStyle = '#5b8ec4';
+    ctx.lineWidth = size * 0.03;
+    ctx.lineCap = 'round';
+    
+    [0.3, 0.5, 0.7].forEach((y, i) => {
+        const startX = size * 0.25;
+        const startY = size * y;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX + size * 0.08, startY + size * 0.08);
+        ctx.lineTo(startX + size * 0.2, startY - size * 0.1);
+        ctx.stroke();
+    });
+}
+
+drawIcon(document.getElementById('c192'), 192);
+drawIcon(document.getElementById('c512'), 512);
+
+// Download links
+const c192 = document.getElementById('c192');
+const c512 = document.getElementById('c512');
+
+const link192 = document.createElement('a');
+link192.download = 'icon-192.png';
+link192.href = c192.toDataURL();
+link192.textContent = 'Download 192x192';
+link192.click();
+
+setTimeout(() => {
+    const link512 = document.createElement('a');
+    link512.download = 'icon-512.png';
+    link512.href = c512.toDataURL();
+    link512.textContent = 'Download 512x512';
+    link512.click();
+}, 1000);
+</script>
+</body>
+</html>

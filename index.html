@@ -585,6 +585,19 @@
                     <span class="marker-icon yellow"></span>
                 </button>
             </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Backup -->
+            <div class="toolbar-section">
+                <button class="filter-btn" onclick="exportTasks()" title="Export backup">
+                    ↓
+                </button>
+                <button class="filter-btn" onclick="document.getElementById('importFile').click()" title="Import backup">
+                    ↑
+                </button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importTasks(event)">
+            </div>
         </div>
 
         <!-- Paper Content Area -->
@@ -886,6 +899,67 @@
 
         // Initial render
         renderTasks();
+
+        // Export tasks to JSON file
+        function exportTasks() {
+            const dataStr = JSON.stringify(tasks, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+
+            const date = new Date().toISOString().split('T')[0];
+            link.download = `tasks-backup-${date}.json`;
+
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // Import tasks from JSON file
+        function importTasks(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedTasks = JSON.parse(e.target.result);
+
+                    if (Array.isArray(importedTasks)) {
+                        // Ask user if they want to merge or replace
+                        const shouldReplace = confirm(
+                            `Import ${importedTasks.length} tasks?\n\n` +
+                            `OK = Replace all tasks\n` +
+                            `Cancel = Merge with existing tasks`
+                        );
+
+                        if (shouldReplace) {
+                            tasks = importedTasks;
+                        } else {
+                            // Merge: add imported tasks with new IDs to avoid conflicts
+                            const maxId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) : 0;
+                            importedTasks.forEach((task, index) => {
+                                task.id = maxId + index + 1;
+                            });
+                            tasks = tasks.concat(importedTasks);
+                        }
+
+                        saveTasks();
+                        renderTasks();
+                        alert(`Successfully imported ${importedTasks.length} tasks!`);
+                    } else {
+                        alert('Invalid backup file format.');
+                    }
+                } catch (error) {
+                    alert('Error reading backup file: ' + error.message);
+                }
+
+                // Reset file input
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
+        }
 
         // Register service worker for PWA
         if ('serviceWorker' in navigator) {
