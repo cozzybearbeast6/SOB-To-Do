@@ -1055,22 +1055,29 @@
             isInputActive = true;
         }
 
+        // Prevent pencil from scrolling the page in type mode
+        paperContent.addEventListener('touchstart', function(e) {
+            if (inputMode === 'type') {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
         // Handle Apple Pencil - activate immediately on pencil touch ONLY in type mode
         paperContent.addEventListener('pointerdown', function(e) {
             // Only handle Apple Pencil input (pen type) when in type mode
             if (e.pointerType === 'pen' && inputMode === 'type') {
-                e.preventDefault(); // Prevent default to avoid double-triggering
+                e.preventDefault();
+                e.stopPropagation();
                 activateInputAt(e);
             }
         });
 
         // Handle regular clicks (finger/mouse)
         paperContent.addEventListener('click', function(e) {
-            // Don't handle if this was already handled by pointerdown (Apple Pencil) or if in draw mode
-            if ((e.pointerType === 'pen' && inputMode === 'type') || inputMode === 'draw') {
-                return;
+            // Only handle regular touch/mouse clicks in type mode
+            if (inputMode === 'type' && e.pointerType !== 'pen') {
+                activateInputAt(e);
             }
-            activateInputAt(e);
         });
 
         function addTaskFromInline() {
