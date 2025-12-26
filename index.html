@@ -530,6 +530,54 @@
         .paper-content.has-tasks {
             cursor: default;
         }
+
+        /* Drawing mode styles */
+        .paper-content.draw-mode {
+            cursor: crosshair;
+        }
+
+        .lock-drawing-btn {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(91, 142, 196, 0.4);
+            cursor: pointer;
+            font-size: 24px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .lock-drawing-btn.visible {
+            display: flex;
+        }
+
+        .lock-drawing-btn:active {
+            transform: scale(0.9);
+        }
+
+        .lock-drawing-btn:hover {
+            background: #4a7bb0;
+            box-shadow: 0 6px 16px rgba(91, 142, 196, 0.5);
+        }
+
+        @media (max-width: 600px) {
+            .lock-drawing-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -588,6 +636,19 @@
 
             <div class="toolbar-divider"></div>
 
+            <!-- Input Mode Toggle -->
+            <div class="toolbar-section">
+                <span class="toolbar-label">Mode:</span>
+                <button class="filter-btn active" id="typeMode" onclick="setInputMode('type')" title="Type mode">
+                    ⌨️
+                </button>
+                <button class="filter-btn" id="drawMode" onclick="setInputMode('draw')" title="Draw mode">
+                    ✏️
+                </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
             <!-- Backup -->
             <div class="toolbar-section">
                 <button class="filter-btn" onclick="exportTasks()" title="Export backup">
@@ -602,6 +663,9 @@
 
         <!-- Paper Content Area -->
         <div class="paper-content" id="paperContent">
+            <!-- Canvas for handwriting -->
+            <canvas id="drawingCanvas" style="position: absolute; left: 0; top: 0; pointer-events: none; z-index: 10;"></canvas>
+
             <!-- Inline input that appears where you click -->
             <div class="inline-input-wrapper" id="inlineInputWrapper">
                 <input
@@ -622,6 +686,11 @@
                 <ul id="completedList" class="task-list"></ul>
             </div>
         </div>
+
+        <!-- Lock drawing button (appears when drawing) -->
+        <button class="lock-drawing-btn" id="lockBtn" onclick="lockCurrentDrawing()" title="Lock task (or double-tap)">
+            🔒
+        </button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -631,6 +700,268 @@
         let currentFilter = 'all';
         let currentTab = 'active';
         let isInputActive = false;
+        let inputMode = 'type'; // 'type' or 'draw'
+        let handwrittenTasks = JSON.parse(localStorage.getItem('handwrittenTasks')) || [];
+
+        // Drawing state
+        let isDrawing = false;
+        let currentStrokes = [];
+        let lockedTasks = [];
+        let canvas, ctx;
+        let selectedTask = null;
+        let isDraggingTask = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        // Initialize canvas
+        function initCanvas() {
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+
+            const paperContent = document.getElementById('paperContent');
+            canvas.width = paperContent.offsetWidth;
+            canvas.height = paperContent.offsetHeight;
+
+            // High DPI support
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+
+            loadHandwrittenTasks();
+            redrawCanvas();
+        }
+
+        // Set input mode
+        function setInputMode(mode) {
+            inputMode = mode;
+            document.getElementById('typeMode').classList.toggle('active', mode === 'type');
+            document.getElementById('drawMode').classList.toggle('active', mode === 'draw');
+
+            const paperContent = document.getElementById('paperContent');
+            if (mode === 'draw') {
+                canvas.style.pointerEvents = 'auto';
+                paperContent.classList.add('draw-mode');
+            } else {
+                canvas.style.pointerEvents = 'none';
+                paperContent.classList.remove('draw-mode');
+                document.getElementById('lockBtn').classList.remove('visible');
+            }
+        }
+
+        // Drawing functions
+        function getCanvasPoint(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function startDrawing(e) {
+            if (inputMode !== 'draw') return;
+
+            const point = getCanvasPoint(e);
+
+            // Check if clicking on a locked task to drag it
+            const clickedTask = findTaskAtPoint(point.x, point.y);
+            if (clickedTask) {
+                selectedTask = clickedTask;
+                isDraggingTask = true;
+                dragOffset = {
+                    x: point.x - clickedTask.bounds.x,
+                    y: point.y - clickedTask.bounds.y
+                };
+                return;
+            }
+
+            isDrawing = true;
+            currentStrokes.push({
+                points: [point],
+                color: '#2c2c2c',
+                width: 2
+            });
+        }
+
+        function draw(e) {
+            if (isDraggingTask && selectedTask) {
+                const point = getCanvasPoint(e);
+                selectedTask.bounds.x = point.x - dragOffset.x;
+                selectedTask.bounds.y = point.y - dragOffset.y;
+                redrawCanvas();
+                return;
+            }
+
+            if (!isDrawing || inputMode !== 'draw') return;
+
+            const point = getCanvasPoint(e);
+            const currentStroke = currentStrokes[currentStrokes.length - 1];
+            currentStroke.points.push(point);
+
+            // Draw the current stroke
+            ctx.strokeStyle = currentStroke.color;
+            ctx.lineWidth = currentStroke.width;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            const points = currentStroke.points;
+            if (points.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
+                ctx.lineTo(point.x, point.y);
+                ctx.stroke();
+            }
+        }
+
+        function stopDrawing(e) {
+            if (isDraggingTask) {
+                isDraggingTask = false;
+                selectedTask = null;
+                saveHandwrittenTasks();
+                return;
+            }
+
+            if (!isDrawing) return;
+            isDrawing = false;
+
+            // Show lock button if there are strokes
+            const lockBtn = document.getElementById('lockBtn');
+            if (currentStrokes.length > 0 && inputMode === 'draw') {
+                lockBtn.classList.add('visible');
+            }
+        }
+
+        // Lock current strokes as a task
+        function lockCurrentDrawing() {
+            if (currentStrokes.length === 0) return;
+
+            // Calculate bounds
+            const bounds = calculateBounds(currentStrokes);
+
+            const task = {
+                id: Date.now(),
+                strokes: currentStrokes,
+                bounds: {...bounds},
+                originalBounds: {...bounds},
+                marker: selectedMarker === 'none' ? null : selectedMarker,
+                completed: false
+            };
+
+            handwrittenTasks.push(task);
+            currentStrokes = [];
+            saveHandwrittenTasks();
+            redrawCanvas();
+            selectMarker('none');
+
+            // Hide lock button
+            document.getElementById('lockBtn').classList.remove('visible');
+        }
+
+        function calculateBounds(strokes) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+            strokes.forEach(stroke => {
+                stroke.points.forEach(point => {
+                    minX = Math.min(minX, point.x);
+                    minY = Math.min(minY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                    maxY = Math.max(maxY, point.y);
+                });
+            });
+
+            return {
+                x: minX - 5,
+                y: minY - 5,
+                width: maxX - minX + 10,
+                height: maxY - minY + 10
+            };
+        }
+
+        function findTaskAtPoint(x, y) {
+            for (let i = handwrittenTasks.length - 1; i >= 0; i--) {
+                const task = handwrittenTasks[i];
+                if (task.completed) continue;
+
+                const b = task.bounds;
+                if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
+                    return task;
+                }
+            }
+            return null;
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw locked tasks
+            handwrittenTasks.forEach(task => {
+                if (currentTab === 'active' && task.completed) return;
+                if (currentTab === 'completed' && !task.completed) return;
+
+                ctx.save();
+
+                // Calculate offset if task has been moved
+                const offsetX = task.bounds.x - (task.originalBounds?.x || task.bounds.x);
+                const offsetY = task.bounds.y - (task.originalBounds?.y || task.bounds.y);
+
+                // Draw strokes with offset
+                task.strokes.forEach(stroke => {
+                    ctx.strokeStyle = task.completed ? '#9b9b9b' : stroke.color;
+                    ctx.lineWidth = stroke.width;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+
+                    if (stroke.points.length > 1) {
+                        ctx.beginPath();
+                        const firstPoint = stroke.points[0];
+                        ctx.moveTo(firstPoint.x + offsetX, firstPoint.y + offsetY);
+                        for (let i = 1; i < stroke.points.length; i++) {
+                            const point = stroke.points[i];
+                            ctx.lineTo(point.x + offsetX, point.y + offsetY);
+                        }
+                        ctx.stroke();
+                    }
+                });
+
+                // Draw bounding box on hover/selection
+                if (selectedTask === task) {
+                    ctx.strokeStyle = 'rgba(91, 142, 196, 0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeRect(task.bounds.x, task.bounds.y, task.bounds.width, task.bounds.height);
+                    ctx.setLineDash([]);
+                }
+
+                ctx.restore();
+            });
+
+            // Draw current strokes being drawn
+            currentStrokes.forEach(stroke => {
+                ctx.strokeStyle = stroke.color;
+                ctx.lineWidth = stroke.width;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                if (stroke.points.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                    for (let i = 1; i < stroke.points.length; i++) {
+                        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                    }
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function saveHandwrittenTasks() {
+            localStorage.setItem('handwrittenTasks', JSON.stringify(handwrittenTasks));
+        }
+
+        function loadHandwrittenTasks() {
+            handwrittenTasks = JSON.parse(localStorage.getItem('handwrittenTasks')) || [];
+        }
 
         // Initialize SortableJS for drag and drop
         let sortable;
@@ -960,6 +1291,40 @@
 
             reader.readAsText(file);
         }
+
+        // Canvas event listeners
+        function setupCanvasListeners() {
+            canvas.addEventListener('pointerdown', startDrawing);
+            canvas.addEventListener('pointermove', draw);
+            canvas.addEventListener('pointerup', stopDrawing);
+            canvas.addEventListener('pointerout', stopDrawing);
+
+            // Double-tap to lock current drawing
+            let lastTapTime = 0;
+            canvas.addEventListener('pointerdown', function(e) {
+                const currentTime = new Date().getTime();
+                const tapGap = currentTime - lastTapTime;
+
+                if (tapGap < 300 && tapGap > 0) {
+                    lockCurrentDrawing();
+                }
+
+                lastTapTime = currentTime;
+            });
+        }
+
+        // Initialize everything when page loads
+        window.addEventListener('load', function() {
+            initCanvas();
+            setupCanvasListeners();
+        });
+
+        // Redraw canvas when switching tabs
+        const originalSwitchTab = switchTab;
+        switchTab = function(tab) {
+            originalSwitchTab.call(this, tab);
+            redrawCanvas();
+        };
 
         // Register service worker for PWA
         if ('serviceWorker' in navigator) {
