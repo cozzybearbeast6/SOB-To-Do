@@ -143,16 +143,19 @@
         }
 
         #inlineTaskInput {
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid var(--accent);
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--accent);
+            border-radius: 4px;
             color: var(--text-primary);
-            padding: 2px 4px;
+            padding: 8px 12px;
             font-size: 16px;
             font-family: 'DM Sans', sans-serif;
             outline: none;
-            min-width: 200px;
-            line-height: calc(var(--line-height) - 12px);
+            min-width: 300px;
+            width: 400px;
+            min-height: 44px;
+            line-height: 1.5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         #inlineTaskInput::placeholder {
@@ -1055,25 +1058,26 @@
             isInputActive = true;
         }
 
-        // Prevent pencil from scrolling the page in type mode
-        paperContent.addEventListener('touchstart', function(e) {
-            if (inputMode === 'type') {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
         // Handle Apple Pencil - activate immediately on pencil touch ONLY in type mode
         paperContent.addEventListener('pointerdown', function(e) {
+            // Don't interfere with task buttons or existing tasks
+            if (e.target.closest('.task-item') || e.target.closest('.inline-input-wrapper')) {
+                return;
+            }
+
             // Only handle Apple Pencil input (pen type) when in type mode
             if (e.pointerType === 'pen' && inputMode === 'type') {
-                e.preventDefault();
-                e.stopPropagation();
                 activateInputAt(e);
             }
         });
 
         // Handle regular clicks (finger/mouse)
         paperContent.addEventListener('click', function(e) {
+            // Don't interfere with task buttons or existing tasks
+            if (e.target.closest('.task-item') || e.target.closest('.inline-input-wrapper')) {
+                return;
+            }
+
             // Only handle regular touch/mouse clicks in type mode
             if (inputMode === 'type' && e.pointerType !== 'pen') {
                 activateInputAt(e);
