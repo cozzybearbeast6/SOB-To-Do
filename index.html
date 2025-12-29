@@ -71,6 +71,7 @@
             align-items: center;
             z-index: 100;
             flex-wrap: wrap;
+            touch-action: manipulation;
         }
 
         .toolbar-section {
@@ -90,6 +91,7 @@
             flex: 1;
             position: relative;
             padding: 40px 40px 40px 80px;
+            min-height: 500px;
         }
 
         /* Lined paper effect */
@@ -110,7 +112,7 @@
             z-index: 0;
         }
 
-        /* Left margin line (red line on legal pad) */
+        /* Left margin line */
         .paper-content::after {
             content: '';
             position: absolute;
@@ -123,43 +125,9 @@
             z-index: 1;
         }
 
-        /* Ensure content is above the lines */
         .paper-content > * {
             position: relative;
             z-index: 2;
-        }
-
-        /* Inline task input that appears where you click */
-        .inline-input-wrapper {
-            position: absolute;
-            left: 0;
-            top: 0;
-            display: none;
-            z-index: 50;
-        }
-
-        .inline-input-wrapper.active {
-            display: block;
-        }
-
-        #inlineTaskInput {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid var(--accent);
-            border-radius: 4px;
-            color: var(--text-primary);
-            padding: 8px 12px;
-            font-size: 16px;
-            font-family: 'DM Sans', sans-serif;
-            outline: none;
-            min-width: 300px;
-            width: 400px;
-            min-height: 44px;
-            line-height: 1.5;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        #inlineTaskInput::placeholder {
-            color: var(--text-light);
         }
 
         .toolbar-label {
@@ -168,65 +136,6 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             font-weight: 600;
-        }
-
-        .marker-selector {
-            display: flex;
-            gap: 6px;
-        }
-
-        .marker-btn {
-            width: 28px;
-            height: 28px;
-            border: 1px solid var(--paper-line);
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            position: relative;
-            box-shadow: 0 1px 2px var(--shadow);
-        }
-
-        .marker-btn:active {
-            transform: scale(0.95);
-        }
-
-        .marker-btn.active {
-            border-color: var(--accent);
-            background: rgba(91, 142, 196, 0.15);
-            box-shadow: 0 1px 3px rgba(91, 142, 196, 0.3);
-        }
-
-        .marker-icon {
-            font-size: 16px;
-        }
-
-        .marker-icon.star {
-            color: var(--star);
-        }
-
-        .marker-icon.green {
-            width: 14px;
-            height: 14px;
-            background: var(--green);
-            border-radius: 50%;
-        }
-
-        .marker-icon.red {
-            width: 14px;
-            height: 14px;
-            background: var(--red);
-            border-radius: 3px;
-        }
-
-        .marker-icon.yellow {
-            width: 14px;
-            height: 14px;
-            background: var(--yellow);
-            border-radius: 3px;
         }
 
         .filter-btn {
@@ -243,6 +152,7 @@
             align-items: center;
             gap: 5px;
             box-shadow: 0 1px 2px var(--shadow);
+            touch-action: manipulation;
         }
 
         .filter-btn:active {
@@ -266,153 +176,206 @@
             height: 10px;
         }
 
-        .task-list {
-            list-style: none;
-            margin-bottom: 40px;
+        .marker-icon.star { color: var(--star); }
+        .marker-icon.green {
+            width: 14px;
+            height: 14px;
+            background: var(--green);
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .marker-icon.red {
+            width: 14px;
+            height: 14px;
+            background: var(--red);
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .marker-icon.yellow {
+            width: 14px;
+            height: 14px;
+            background: var(--yellow);
+            border-radius: 3px;
+            display: inline-block;
         }
 
-        .task-item {
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid transparent;
-            padding: 6px 0;
-            margin-bottom: 0;
+        /* Canvas layer for drawing */
+        #drawingCanvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            z-index: 50;
+            /* Let pen through but block finger for drawing */
+        }
+
+        /* Floating toolbar for confirming drawings */
+        .drawing-toolbar {
+            position: absolute;
+            display: none;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 8px;
+            gap: 6px;
+            z-index: 200;
+            flex-direction: row;
+            align-items: center;
+            touch-action: manipulation;
+        }
+
+        .drawing-toolbar.visible {
+            display: flex;
+            animation: popIn 0.2s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .drawing-toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid transparent;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 12px;
-            cursor: move;
-            touch-action: none;
-            transition: all 0.2s ease;
-            position: relative;
-            min-height: var(--line-height);
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
         }
 
-        .task-item::before {
-            content: '';
+        .drawing-toolbar-btn:active {
+            transform: scale(0.9);
+        }
+
+        .drawing-toolbar-btn.marker-option {
+            width: 36px;
+            height: 36px;
+        }
+
+        .drawing-toolbar-btn.marker-option.selected {
+            border-color: var(--accent);
+            background: rgba(91, 142, 196, 0.1);
+        }
+
+        .drawing-toolbar-btn.confirm {
+            background: var(--green);
+            color: white;
+        }
+
+        .drawing-toolbar-btn.cancel {
+            background: var(--red);
+            color: white;
+        }
+
+        .drawing-toolbar-divider {
+            width: 1px;
+            height: 30px;
+            background: #ddd;
+            margin: 0 4px;
+        }
+
+        /* Task cards (locked handwritten tasks) */
+        .task-card {
+            position: absolute;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: grab;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .task-card:hover {
+            border-color: rgba(91, 142, 196, 0.3);
+        }
+
+        .task-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 2px 12px rgba(91, 142, 196, 0.3);
+        }
+
+        .task-card.dragging {
+            cursor: grabbing;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-card.completed {
+            opacity: 0.5;
+        }
+
+        /* Task card marker indicator */
+        .task-card-marker {
             position: absolute;
             left: -8px;
             top: 50%;
             transform: translateY(-50%);
-            width: 6px;
-            height: 6px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            background: transparent;
-            transition: background 0.2s ease;
-        }
-
-        .task-item.has-star::before { background: var(--star); }
-        .task-item.has-green::before { background: var(--green); }
-        .task-item.has-red::before { background: var(--red); }
-        .task-item.has-yellow::before { background: var(--yellow); }
-
-        .task-item:hover {
-            background: rgba(91, 142, 196, 0.05);
-        }
-
-        .task-item.sortable-ghost {
-            opacity: 0.3;
-        }
-
-        .task-item.sortable-drag {
-            background: white;
-            box-shadow: 0 4px 12px var(--shadow);
-            transform: rotate(1deg);
-            border-radius: 4px;
-        }
-
-        .drag-handle {
-            color: var(--text-light);
-            font-size: 14px;
-            cursor: grab;
-            touch-action: none;
-            user-select: none;
-            line-height: 1;
-            opacity: 0.5;
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .task-item:hover .drag-handle {
-            opacity: 1;
-        }
-
-        .task-marker {
-            font-size: 16px;
-            min-width: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 12px;
         }
 
-        .task-marker .marker-icon {
-            font-size: 16px;
+        /* Task card actions (shown when selected) */
+        .task-card-actions {
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .task-marker .marker-icon.green,
-        .task-marker .marker-icon.red,
-        .task-marker .marker-icon.yellow {
-            width: 12px;
-            height: 12px;
-        }
-
-        .task-text {
-            flex: 1;
-            font-size: 16px;
-            color: var(--text-primary);
-            word-break: break-word;
-            line-height: calc(var(--line-height) - 12px);
-        }
-
-        .task-text.completed {
-            text-decoration: line-through;
-            color: var(--text-light);
-        }
-
-        .task-actions {
+        .task-card.selected .task-card-actions {
             display: flex;
-            gap: 6px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
         }
 
-        .task-item:hover .task-actions {
-            opacity: 1;
-        }
-
-        .task-btn {
+        .task-card-action {
             width: 28px;
             height: 28px;
-            background: white;
-            border: 1px solid var(--paper-line);
-            border-radius: 6px;
+            border: none;
+            border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 14px;
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            transition: transform 0.15s;
             touch-action: manipulation;
-            box-shadow: 0 1px 2px var(--shadow);
         }
 
-        .task-btn:active {
-            transform: scale(0.95);
+        .task-card-action:active {
+            transform: scale(0.9);
         }
 
-        .task-btn.complete-btn:hover {
+        .task-card-action.complete {
             background: var(--green);
-            border-color: var(--green);
             color: white;
         }
 
-        .task-btn.delete-btn:hover {
+        .task-card-action.delete {
             background: var(--red);
-            border-color: var(--red);
             color: white;
         }
 
+        /* Tabs */
         .tabs {
             display: flex;
             gap: 4px;
@@ -434,6 +397,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'DM Sans', sans-serif;
+            touch-action: manipulation;
         }
 
         .tab.active {
@@ -442,45 +406,42 @@
             box-shadow: 0 1px 2px var(--shadow);
         }
 
-        .tab-content {
+        /* Hint text */
+        .hint-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-light);
+            font-size: 16px;
+            text-align: center;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .hint-text.hidden {
             display: none;
         }
 
-        .tab-content.active {
-            display: block;
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 1000;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 64px 20px;
-            color: var(--text-light);
-        }
-
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.3;
-        }
-
-        .empty-state-text {
-            font-size: 15px;
-            font-weight: 400;
-            line-height: var(--line-height);
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .task-item {
-            animation: slideIn 0.2s ease;
+        .status-indicator.visible {
+            opacity: 1;
         }
 
         @media (max-width: 600px) {
@@ -508,78 +469,17 @@
             .toolbar-label {
                 display: none;
             }
-
-            .task-actions {
-                opacity: 1;
-            }
-        }
-
-        /* Touch devices - always show actions */
-        @media (hover: none) {
-            .task-actions {
-                opacity: 1;
-            }
-
-            .drag-handle {
-                opacity: 1;
-            }
-        }
-
-        /* Click-to-write cursor */
-        .paper-content {
-            cursor: text;
-        }
-
-        .paper-content.has-tasks {
-            cursor: default;
-        }
-
-        /* Drawing mode styles */
-        .paper-content.draw-mode {
-            cursor: crosshair;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        #drawingCanvas {
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
         <!-- Top Toolbar -->
-        <div class="toolbar">
+        <div class="toolbar" id="mainToolbar">
             <!-- Tabs -->
             <div class="toolbar-section tabs">
                 <button class="tab active" onclick="switchTab('active')">Active</button>
-                <button class="tab" onclick="switchTab('completed')">Completed</button>
-            </div>
-
-            <div class="toolbar-divider"></div>
-
-            <!-- Markers -->
-            <div class="toolbar-section">
-                <span class="toolbar-label">Mark:</span>
-                <div class="marker-selector">
-                    <button class="marker-btn active" data-marker="none" onclick="selectMarker('none')" title="No marker">
-                        <div class="marker-icon">—</div>
-                    </button>
-                    <button class="marker-btn" data-marker="star" onclick="selectMarker('star')" title="Star">
-                        <div class="marker-icon star">★</div>
-                    </button>
-                    <button class="marker-btn" data-marker="green" onclick="selectMarker('green')" title="Green">
-                        <div class="marker-icon green"></div>
-                    </button>
-                    <button class="marker-btn" data-marker="red" onclick="selectMarker('red')" title="Red">
-                        <div class="marker-icon red"></div>
-                    </button>
-                    <button class="marker-btn" data-marker="yellow" onclick="selectMarker('yellow')" title="Yellow">
-                        <div class="marker-icon yellow"></div>
-                    </button>
-                </div>
+                <button class="tab" onclick="switchTab('completed')">Done</button>
             </div>
 
             <div class="toolbar-divider"></div>
@@ -587,34 +487,18 @@
             <!-- Filters -->
             <div class="toolbar-section">
                 <span class="toolbar-label">Filter:</span>
-                <button class="filter-btn active" onclick="setFilter('all')">All</button>
-                <button class="filter-btn" onclick="setFilter('star')">
+                <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+                <button class="filter-btn" data-filter="star" onclick="setFilter('star')">
                     <span class="marker-icon star">★</span>
                 </button>
-                <button class="filter-btn" onclick="setFilter('green')">
+                <button class="filter-btn" data-filter="green" onclick="setFilter('green')">
                     <span class="marker-icon green"></span>
                 </button>
-                <button class="filter-btn" onclick="setFilter('red')">
+                <button class="filter-btn" data-filter="red" onclick="setFilter('red')">
                     <span class="marker-icon red"></span>
                 </button>
-                <button class="filter-btn" onclick="setFilter('yellow')">
+                <button class="filter-btn" data-filter="yellow" onclick="setFilter('yellow')">
                     <span class="marker-icon yellow"></span>
-                </button>
-            </div>
-
-            <div class="toolbar-divider"></div>
-
-            <!-- Input Mode Toggle -->
-            <div class="toolbar-section">
-                <span class="toolbar-label">Mode:</span>
-                <button class="filter-btn active" id="typeMode" onclick="setInputMode('type')" title="Type mode">
-                    ⌨️
-                </button>
-                <button class="filter-btn" id="drawMode" onclick="setInputMode('draw')" title="Draw mode">
-                    ✏️
-                </button>
-                <button class="filter-btn" id="lockBtn" onclick="lockCurrentDrawing()" title="Lock drawing" style="display: none;">
-                    🔒
                 </button>
             </div>
 
@@ -622,106 +506,225 @@
 
             <!-- Backup -->
             <div class="toolbar-section">
-                <button class="filter-btn" onclick="exportTasks()" title="Export backup">
-                    ↓
-                </button>
-                <button class="filter-btn" onclick="document.getElementById('importFile').click()" title="Import backup">
-                    ↑
-                </button>
+                <button class="filter-btn" onclick="exportTasks()" title="Export">↓</button>
+                <button class="filter-btn" onclick="document.getElementById('importFile').click()" title="Import">↑</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importTasks(event)">
+                <button class="filter-btn" onclick="clearAllTasks()" title="Clear All">🗑️</button>
             </div>
         </div>
 
         <!-- Paper Content Area -->
         <div class="paper-content" id="paperContent">
             <!-- Canvas for handwriting -->
-            <canvas id="drawingCanvas" style="position: absolute; left: 0; top: 0; pointer-events: none; z-index: 10;"></canvas>
+            <canvas id="drawingCanvas"></canvas>
 
-            <!-- Inline input that appears where you click -->
-            <div class="inline-input-wrapper" id="inlineInputWrapper">
-                <input
-                    type="text"
-                    id="inlineTaskInput"
-                    placeholder="Type your task..."
-                    autocomplete="off"
-                >
+            <!-- Hint text -->
+            <div class="hint-text" id="hintText">
+                ✏️ Use Apple Pencil to write a task<br>
+                <small>Tap anywhere with finger to type instead</small>
             </div>
 
-            <!-- Active Tasks Tab -->
-            <div id="activeTab" class="tab-content active">
-                <ul id="taskList" class="task-list"></ul>
-            </div>
+            <!-- Task cards container -->
+            <div id="taskCardsContainer"></div>
+        </div>
 
-            <!-- Completed Tasks Tab -->
-            <div id="completedTab" class="tab-content">
-                <ul id="completedList" class="task-list"></ul>
-            </div>
+        <!-- Floating drawing toolbar -->
+        <div class="drawing-toolbar" id="drawingToolbar">
+            <button class="drawing-toolbar-btn marker-option selected" data-marker="none" onclick="selectDrawingMarker('none')" title="No marker">
+                —
+            </button>
+            <button class="drawing-toolbar-btn marker-option" data-marker="star" onclick="selectDrawingMarker('star')" title="Star">
+                <span class="marker-icon star">★</span>
+            </button>
+            <button class="drawing-toolbar-btn marker-option" data-marker="green" onclick="selectDrawingMarker('green')" title="Green">
+                <span class="marker-icon green"></span>
+            </button>
+            <button class="drawing-toolbar-btn marker-option" data-marker="red" onclick="selectDrawingMarker('red')" title="Red">
+                <span class="marker-icon red"></span>
+            </button>
+            <button class="drawing-toolbar-btn marker-option" data-marker="yellow" onclick="selectDrawingMarker('yellow')" title="Yellow">
+                <span class="marker-icon yellow"></span>
+            </button>
+            <div class="drawing-toolbar-divider"></div>
+            <button class="drawing-toolbar-btn confirm" onclick="confirmDrawing()" title="Save task">✓</button>
+            <button class="drawing-toolbar-btn cancel" onclick="cancelDrawing()" title="Cancel">✕</button>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- Status indicator -->
+    <div class="status-indicator" id="statusIndicator"></div>
+
     <script>
-        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-        let selectedMarker = 'none';
+        // ==================== STATE ====================
+        let tasks = [];
         let currentFilter = 'all';
         let currentTab = 'active';
-        let isInputActive = false;
-        let inputMode = 'type'; // 'type' or 'draw'
-        let handwrittenTasks = JSON.parse(localStorage.getItem('handwrittenTasks')) || [];
-
+        let selectedDrawingMarker = 'none';
+        
         // Drawing state
+        let canvas, ctx;
         let isDrawing = false;
         let currentStrokes = [];
-        let lockedTasks = [];
-        let canvas, ctx;
-        let selectedTask = null;
+        let drawingBounds = null;
+        let isPenActive = false;
+        
+        // Task selection state
+        let selectedTaskId = null;
         let isDraggingTask = false;
         let dragOffset = { x: 0, y: 0 };
 
-        // Initialize canvas
-        function initCanvas() {
+        // ==================== INITIALIZATION ====================
+        function init() {
             canvas = document.getElementById('drawingCanvas');
             ctx = canvas.getContext('2d');
+            
+            loadTasks();
+            resizeCanvas();
+            setupEventListeners();
+            renderTaskCards();
+            updateHintVisibility();
+            
+            window.addEventListener('resize', resizeCanvas);
+        }
 
+        function resizeCanvas() {
             const paperContent = document.getElementById('paperContent');
-            canvas.width = paperContent.offsetWidth;
-            canvas.height = paperContent.offsetHeight;
-
-            // High DPI support
+            const rect = paperContent.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
+            
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
             canvas.style.width = rect.width + 'px';
             canvas.style.height = rect.height + 'px';
-
-            loadHandwrittenTasks();
+            ctx.scale(dpr, dpr);
+            
             redrawCanvas();
         }
 
-        // Set input mode
-        function setInputMode(mode) {
-            inputMode = mode;
-            document.getElementById('typeMode').classList.toggle('active', mode === 'type');
-            document.getElementById('drawMode').classList.toggle('active', mode === 'draw');
+        function setupEventListeners() {
+            // Canvas events - only respond to pen
+            canvas.addEventListener('pointerdown', handlePointerDown, { passive: false });
+            canvas.addEventListener('pointermove', handlePointerMove, { passive: false });
+            canvas.addEventListener('pointerup', handlePointerUp, { passive: false });
+            canvas.addEventListener('pointerleave', handlePointerUp, { passive: false });
+            canvas.addEventListener('pointercancel', handlePointerUp, { passive: false });
+            
+            // Prevent default touch behaviors on canvas
+            canvas.addEventListener('touchstart', e => {
+                if (isPenActive || isDrawing) e.preventDefault();
+            }, { passive: false });
+            
+            canvas.addEventListener('touchmove', e => {
+                if (isPenActive || isDrawing) e.preventDefault();
+            }, { passive: false });
+            
+            // Paper content click for typing (finger only)
+            document.getElementById('paperContent').addEventListener('click', handlePaperClick);
+            
+            // Click outside to deselect tasks
+            document.addEventListener('click', handleDocumentClick);
+            
+            // Prevent context menu during drawing
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
+        }
 
-            const paperContent = document.getElementById('paperContent');
-            if (mode === 'draw') {
-                canvas.style.pointerEvents = 'auto';
-                paperContent.classList.add('draw-mode');
-                // Prevent any selection/interaction on paper content in draw mode
-                paperContent.style.pointerEvents = 'none';
-                canvas.style.pointerEvents = 'auto';
-            } else {
-                canvas.style.pointerEvents = 'none';
-                paperContent.classList.remove('draw-mode');
-                paperContent.style.pointerEvents = 'auto';
-                document.getElementById('lockBtn').style.display = 'none';
+        // ==================== POINTER HANDLING ====================
+        function handlePointerDown(e) {
+            const point = getCanvasPoint(e);
+            
+            // Check if clicking on a task card first
+            const clickedTask = findTaskAtPoint(point.x, point.y);
+            
+            if (e.pointerType === 'pen') {
+                // Pen input - start drawing or interact with task
+                isPenActive = true;
+                
+                if (clickedTask && clickedTask.id === selectedTaskId) {
+                    // Drag selected task
+                    startDraggingTask(clickedTask, point);
+                } else if (currentStrokes.length === 0) {
+                    // Start new drawing
+                    hideDrawingToolbar();
+                    deselectTask();
+                    startDrawing(point);
+                }
+                
+                e.preventDefault();
+            } else if (e.pointerType === 'touch' || e.pointerType === 'mouse') {
+                // Finger/mouse - interact with tasks
+                if (clickedTask) {
+                    e.preventDefault();
+                    if (selectedTaskId === clickedTask.id) {
+                        startDraggingTask(clickedTask, point);
+                    } else {
+                        selectTask(clickedTask.id);
+                    }
+                }
             }
         }
 
-        // Drawing functions
+        function handlePointerMove(e) {
+            const point = getCanvasPoint(e);
+            
+            if (isDraggingTask) {
+                e.preventDefault();
+                moveTask(point);
+                return;
+            }
+            
+            if (isDrawing && e.pointerType === 'pen') {
+                e.preventDefault();
+                continueDrawing(point);
+            }
+        }
+
+        function handlePointerUp(e) {
+            if (isDraggingTask) {
+                stopDraggingTask();
+                return;
+            }
+            
+            if (isDrawing) {
+                stopDrawing();
+            }
+            
+            isPenActive = false;
+        }
+
+        function handlePaperClick(e) {
+            // Only handle finger/mouse clicks (not pen)
+            if (e.pointerType === 'pen') return;
+            
+            // Don't trigger if clicking on task cards or toolbar
+            if (e.target.closest('.task-card') || 
+                e.target.closest('.drawing-toolbar') ||
+                e.target.closest('#mainToolbar') ||
+                e.target.closest('.task-card-actions')) {
+                return;
+            }
+            
+            // If there's an active drawing, don't open type input
+            if (currentStrokes.length > 0) return;
+            
+            // Show prompt for typed task
+            const text = prompt('Enter task:');
+            if (text && text.trim()) {
+                addTypedTask(text.trim(), getCanvasPoint(e));
+            }
+        }
+
+        function handleDocumentClick(e) {
+            // Deselect task if clicking outside
+            if (!e.target.closest('.task-card') && 
+                !e.target.closest('.task-card-actions') &&
+                !e.target.closest('.drawing-toolbar')) {
+                if (selectedTaskId && !isDraggingTask) {
+                    deselectTask();
+                }
+            }
+        }
+
+        // ==================== DRAWING ====================
         function getCanvasPoint(e) {
             const rect = canvas.getBoundingClientRect();
             return {
@@ -730,57 +733,29 @@
             };
         }
 
-        function startDrawing(e) {
-            if (inputMode !== 'draw') return;
-
-            e.preventDefault();
-            const point = getCanvasPoint(e);
-
-            // Check if clicking on a locked task to drag it
-            const clickedTask = findTaskAtPoint(point.x, point.y);
-            if (clickedTask) {
-                selectedTask = clickedTask;
-                isDraggingTask = true;
-                dragOffset = {
-                    x: point.x - clickedTask.bounds.x,
-                    y: point.y - clickedTask.bounds.y
-                };
-                return;
-            }
-
+        function startDrawing(point) {
             isDrawing = true;
             currentStrokes.push({
                 points: [point],
                 color: '#2c2c2c',
                 width: 2
             });
+            updateHintVisibility();
         }
 
-        function draw(e) {
-            if (isDraggingTask && selectedTask) {
-                e.preventDefault();
-                const point = getCanvasPoint(e);
-                selectedTask.bounds.x = point.x - dragOffset.x;
-                selectedTask.bounds.y = point.y - dragOffset.y;
-                redrawCanvas();
-                return;
-            }
-
-            if (!isDrawing || inputMode !== 'draw') return;
-
-            e.preventDefault();
-            const point = getCanvasPoint(e);
-            const currentStroke = currentStrokes[currentStrokes.length - 1];
-            currentStroke.points.push(point);
-
-            // Draw the current stroke
-            ctx.strokeStyle = currentStroke.color;
-            ctx.lineWidth = currentStroke.width;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            const points = currentStroke.points;
+        function continueDrawing(point) {
+            if (!isDrawing || currentStrokes.length === 0) return;
+            
+            const stroke = currentStrokes[currentStrokes.length - 1];
+            stroke.points.push(point);
+            
+            // Draw incrementally
+            const points = stroke.points;
             if (points.length > 1) {
+                ctx.strokeStyle = stroke.color;
+                ctx.lineWidth = stroke.width;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
                 ctx.beginPath();
                 ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
                 ctx.lineTo(point.x, point.y);
@@ -788,557 +763,449 @@
             }
         }
 
-        function stopDrawing(e) {
-            if (isDraggingTask) {
-                isDraggingTask = false;
-                selectedTask = null;
-                saveHandwrittenTasks();
-                return;
-            }
-
+        function stopDrawing() {
             if (!isDrawing) return;
             isDrawing = false;
-
-            // Show lock button if there are strokes
-            const lockBtn = document.getElementById('lockBtn');
-            if (currentStrokes.length > 0 && inputMode === 'draw') {
-                lockBtn.style.display = 'flex';
+            
+            // If we have strokes, show the toolbar
+            if (currentStrokes.length > 0 && hasValidStrokes()) {
+                drawingBounds = calculateBounds(currentStrokes);
+                showDrawingToolbar();
             }
         }
 
-        // Lock current strokes as a task
-        function lockCurrentDrawing() {
-            if (currentStrokes.length === 0) return;
-
-            // Calculate bounds
-            const bounds = calculateBounds(currentStrokes);
-
-            const task = {
-                id: Date.now(),
-                strokes: currentStrokes,
-                bounds: {...bounds},
-                originalBounds: {...bounds},
-                marker: selectedMarker === 'none' ? null : selectedMarker,
-                completed: false
-            };
-
-            handwrittenTasks.push(task);
-            currentStrokes = [];
-            saveHandwrittenTasks();
-            redrawCanvas();
-            selectMarker('none');
-
-            // Hide lock button
-            document.getElementById('lockBtn').style.display = 'none';
+        function hasValidStrokes() {
+            // Check if there's meaningful content
+            let totalPoints = 0;
+            currentStrokes.forEach(s => totalPoints += s.points.length);
+            return totalPoints > 5; // At least a few points
         }
 
         function calculateBounds(strokes) {
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
+            let minX = Infinity, minY = Infinity;
+            let maxX = -Infinity, maxY = -Infinity;
+            
             strokes.forEach(stroke => {
-                stroke.points.forEach(point => {
-                    minX = Math.min(minX, point.x);
-                    minY = Math.min(minY, point.y);
-                    maxX = Math.max(maxX, point.x);
-                    maxY = Math.max(maxY, point.y);
+                stroke.points.forEach(p => {
+                    minX = Math.min(minX, p.x);
+                    minY = Math.min(minY, p.y);
+                    maxX = Math.max(maxX, p.x);
+                    maxY = Math.max(maxY, p.y);
                 });
             });
-
+            
+            const padding = 10;
             return {
-                x: minX - 5,
-                y: minY - 5,
-                width: maxX - minX + 10,
-                height: maxY - minY + 10
+                x: minX - padding,
+                y: minY - padding,
+                width: maxX - minX + padding * 2,
+                height: maxY - minY + padding * 2
             };
         }
 
-        function findTaskAtPoint(x, y) {
-            for (let i = handwrittenTasks.length - 1; i >= 0; i--) {
-                const task = handwrittenTasks[i];
-                if (task.completed) continue;
+        function redrawCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+            
+            // Draw active task strokes
+            tasks.forEach(task => {
+                if (!task.strokes) return;
+                if (currentTab === 'active' && task.completed) return;
+                if (currentTab === 'completed' && !task.completed) return;
+                if (currentFilter !== 'all' && task.marker !== currentFilter) return;
+                
+                drawTaskStrokes(task);
+            });
+            
+            // Draw current drawing
+            currentStrokes.forEach(stroke => {
+                drawStroke(stroke, 0, 0);
+            });
+        }
 
-                const b = task.bounds;
-                if (x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height) {
+        function drawTaskStrokes(task) {
+            const offsetX = (task.position?.x || task.bounds.x) - task.bounds.x;
+            const offsetY = (task.position?.y || task.bounds.y) - task.bounds.y;
+            
+            task.strokes.forEach(stroke => {
+                const color = task.completed ? '#999' : stroke.color;
+                drawStroke(stroke, offsetX, offsetY, color);
+            });
+        }
+
+        function drawStroke(stroke, offsetX = 0, offsetY = 0, colorOverride = null) {
+            if (stroke.points.length < 2) return;
+            
+            ctx.strokeStyle = colorOverride || stroke.color;
+            ctx.lineWidth = stroke.width;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(stroke.points[0].x + offsetX, stroke.points[0].y + offsetY);
+            for (let i = 1; i < stroke.points.length; i++) {
+                ctx.lineTo(stroke.points[i].x + offsetX, stroke.points[i].y + offsetY);
+            }
+            ctx.stroke();
+        }
+
+        // ==================== DRAWING TOOLBAR ====================
+        function showDrawingToolbar() {
+            const toolbar = document.getElementById('drawingToolbar');
+            const paperContent = document.getElementById('paperContent');
+            const paperRect = paperContent.getBoundingClientRect();
+            
+            // Position below the drawing
+            let x = drawingBounds.x + drawingBounds.width / 2;
+            let y = drawingBounds.y + drawingBounds.height + 15;
+            
+            // Keep within bounds
+            const toolbarWidth = 320;
+            x = Math.max(toolbarWidth / 2, Math.min(x, paperRect.width - toolbarWidth / 2));
+            y = Math.min(y, paperRect.height - 60);
+            
+            toolbar.style.left = (paperRect.left + x - toolbarWidth / 2) + 'px';
+            toolbar.style.top = (paperRect.top + y) + 'px';
+            toolbar.classList.add('visible');
+            
+            // Reset marker selection
+            selectDrawingMarker('none');
+        }
+
+        function hideDrawingToolbar() {
+            document.getElementById('drawingToolbar').classList.remove('visible');
+        }
+
+        function selectDrawingMarker(marker) {
+            selectedDrawingMarker = marker;
+            document.querySelectorAll('.drawing-toolbar .marker-option').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.marker === marker);
+            });
+        }
+
+        function confirmDrawing() {
+            if (currentStrokes.length === 0) return;
+            
+            const task = {
+                id: Date.now(),
+                strokes: currentStrokes,
+                bounds: { ...drawingBounds },
+                position: { x: drawingBounds.x, y: drawingBounds.y },
+                marker: selectedDrawingMarker === 'none' ? null : selectedDrawingMarker,
+                completed: false,
+                isHandwritten: true
+            };
+            
+            tasks.push(task);
+            saveTasks();
+            
+            currentStrokes = [];
+            drawingBounds = null;
+            hideDrawingToolbar();
+            
+            renderTaskCards();
+            redrawCanvas();
+            updateHintVisibility();
+            showStatus('Task saved!');
+        }
+
+        function cancelDrawing() {
+            currentStrokes = [];
+            drawingBounds = null;
+            hideDrawingToolbar();
+            redrawCanvas();
+            updateHintVisibility();
+        }
+
+        // ==================== TASK MANAGEMENT ====================
+        function addTypedTask(text, position) {
+            const task = {
+                id: Date.now(),
+                text: text,
+                position: position || { x: 100, y: 100 },
+                marker: null,
+                completed: false,
+                isHandwritten: false
+            };
+            
+            tasks.push(task);
+            saveTasks();
+            renderTaskCards();
+            updateHintVisibility();
+            showStatus('Task added!');
+        }
+
+        function findTaskAtPoint(x, y) {
+            const activeTasks = tasks.filter(t => {
+                if (currentTab === 'active' && t.completed) return false;
+                if (currentTab === 'completed' && !t.completed) return false;
+                if (currentFilter !== 'all' && t.marker !== currentFilter) return false;
+                return true;
+            });
+            
+            // Check in reverse order (top-most first)
+            for (let i = activeTasks.length - 1; i >= 0; i--) {
+                const task = activeTasks[i];
+                const pos = task.position || task.bounds;
+                const bounds = task.bounds || { width: 150, height: 40 };
+                
+                if (x >= pos.x && x <= pos.x + bounds.width &&
+                    y >= pos.y && y <= pos.y + bounds.height) {
                     return task;
                 }
             }
             return null;
         }
 
-        function redrawCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw locked tasks
-            handwrittenTasks.forEach(task => {
-                if (currentTab === 'active' && task.completed) return;
-                if (currentTab === 'completed' && !task.completed) return;
-
-                ctx.save();
-
-                // Calculate offset if task has been moved
-                const offsetX = task.bounds.x - (task.originalBounds?.x || task.bounds.x);
-                const offsetY = task.bounds.y - (task.originalBounds?.y || task.bounds.y);
-
-                // Draw strokes with offset
-                task.strokes.forEach(stroke => {
-                    ctx.strokeStyle = task.completed ? '#9b9b9b' : stroke.color;
-                    ctx.lineWidth = stroke.width;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-
-                    if (stroke.points.length > 1) {
-                        ctx.beginPath();
-                        const firstPoint = stroke.points[0];
-                        ctx.moveTo(firstPoint.x + offsetX, firstPoint.y + offsetY);
-                        for (let i = 1; i < stroke.points.length; i++) {
-                            const point = stroke.points[i];
-                            ctx.lineTo(point.x + offsetX, point.y + offsetY);
-                        }
-                        ctx.stroke();
-                    }
-                });
-
-                // Draw bounding box on hover/selection
-                if (selectedTask === task) {
-                    ctx.strokeStyle = 'rgba(91, 142, 196, 0.5)';
-                    ctx.lineWidth = 1;
-                    ctx.setLineDash([5, 5]);
-                    ctx.strokeRect(task.bounds.x, task.bounds.y, task.bounds.width, task.bounds.height);
-                    ctx.setLineDash([]);
-                }
-
-                ctx.restore();
-            });
-
-            // Draw current strokes being drawn
-            currentStrokes.forEach(stroke => {
-                ctx.strokeStyle = stroke.color;
-                ctx.lineWidth = stroke.width;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-
-                if (stroke.points.length > 1) {
-                    ctx.beginPath();
-                    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-                    for (let i = 1; i < stroke.points.length; i++) {
-                        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
-                    }
-                    ctx.stroke();
-                }
-            });
+        function selectTask(taskId) {
+            selectedTaskId = taskId;
+            renderTaskCards();
         }
 
-        function saveHandwrittenTasks() {
-            localStorage.setItem('handwrittenTasks', JSON.stringify(handwrittenTasks));
+        function deselectTask() {
+            selectedTaskId = null;
+            renderTaskCards();
         }
 
-        function loadHandwrittenTasks() {
-            handwrittenTasks = JSON.parse(localStorage.getItem('handwrittenTasks')) || [];
+        function startDraggingTask(task, point) {
+            isDraggingTask = true;
+            selectedTaskId = task.id;
+            const pos = task.position || task.bounds;
+            dragOffset = {
+                x: point.x - pos.x,
+                y: point.y - pos.y
+            };
+            document.body.style.cursor = 'grabbing';
         }
 
-        // Initialize SortableJS for drag and drop
-        let sortable;
-
-        function initSortable() {
-            const taskList = document.getElementById('taskList');
-            if (sortable) {
-                sortable.destroy();
-            }
-            sortable = new Sortable(taskList, {
-                animation: 200,
-                ghostClass: 'sortable-ghost',
-                dragClass: 'sortable-drag',
-                handle: '.drag-handle',
-                onEnd: function() {
-                    updateTaskOrder();
-                }
-            });
+        function moveTask(point) {
+            const task = tasks.find(t => t.id === selectedTaskId);
+            if (!task) return;
+            
+            task.position = {
+                x: point.x - dragOffset.x,
+                y: point.y - dragOffset.y
+            };
+            
+            redrawCanvas();
+            renderTaskCards();
         }
 
-        function updateTaskOrder() {
-            const taskList = document.getElementById('taskList');
-            const taskItems = taskList.querySelectorAll('.task-item');
-
-            taskItems.forEach((item, index) => {
-                const taskId = parseInt(item.dataset.id);
-                const task = tasks.find(t => t.id === taskId);
-                if (task) {
-                    task.order = index;
-                }
-            });
-
+        function stopDraggingTask() {
+            isDraggingTask = false;
+            document.body.style.cursor = '';
             saveTasks();
         }
 
-        function selectMarker(marker) {
-            selectedMarker = marker;
-            document.querySelectorAll('.marker-btn').forEach(btn => {
-                btn.classList.remove('active');
+        function completeTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = true;
+                saveTasks();
+                deselectTask();
+                redrawCanvas();
+                renderTaskCards();
+                showStatus('Task completed! ✓');
+            }
+        }
+
+        function deleteTask(taskId) {
+            tasks = tasks.filter(t => t.id !== taskId);
+            saveTasks();
+            deselectTask();
+            redrawCanvas();
+            renderTaskCards();
+            updateHintVisibility();
+            showStatus('Task deleted');
+        }
+
+        // ==================== RENDERING ====================
+        function renderTaskCards() {
+            const container = document.getElementById('taskCardsContainer');
+            container.innerHTML = '';
+            
+            const filteredTasks = tasks.filter(t => {
+                if (currentTab === 'active' && t.completed) return false;
+                if (currentTab === 'completed' && !t.completed) return false;
+                if (currentFilter !== 'all' && t.marker !== currentFilter) return false;
+                return true;
             });
-            document.querySelector(`[data-marker="${marker}"]`).classList.add('active');
+            
+            filteredTasks.forEach(task => {
+                const card = createTaskCard(task);
+                container.appendChild(card);
+            });
+        }
+
+        function createTaskCard(task) {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.dataset.id = task.id;
+            
+            if (task.completed) card.classList.add('completed');
+            if (task.id === selectedTaskId) card.classList.add('selected');
+            
+            const pos = task.position || task.bounds || { x: 100, y: 100 };
+            const bounds = task.bounds || { width: 150, height: 40 };
+            
+            card.style.left = pos.x + 'px';
+            card.style.top = pos.y + 'px';
+            card.style.width = bounds.width + 'px';
+            card.style.height = bounds.height + 'px';
+            
+            // Marker indicator
+            if (task.marker) {
+                const marker = document.createElement('div');
+                marker.className = 'task-card-marker';
+                if (task.marker === 'star') {
+                    marker.innerHTML = '<span style="color: var(--star);">★</span>';
+                } else {
+                    marker.style.background = `var(--${task.marker})`;
+                }
+                card.appendChild(marker);
+            }
+            
+            // Actions (visible when selected)
+            if (!task.completed) {
+                const actions = document.createElement('div');
+                actions.className = 'task-card-actions';
+                actions.innerHTML = `
+                    <button class="task-card-action complete" onclick="event.stopPropagation(); completeTask(${task.id})" title="Complete">✓</button>
+                    <button class="task-card-action delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete">✕</button>
+                `;
+                card.appendChild(actions);
+            } else {
+                const actions = document.createElement('div');
+                actions.className = 'task-card-actions';
+                actions.innerHTML = `
+                    <button class="task-card-action delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete">✕</button>
+                `;
+                card.appendChild(actions);
+            }
+            
+            // Click to select
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('.task-card-action')) {
+                    selectTask(task.id);
+                }
+            });
+            
+            return card;
+        }
+
+        function updateHintVisibility() {
+            const hint = document.getElementById('hintText');
+            const activeTasks = tasks.filter(t => !t.completed);
+            const hasDrawing = currentStrokes.length > 0;
+            
+            if (activeTasks.length === 0 && !hasDrawing && currentTab === 'active') {
+                hint.classList.remove('hidden');
+            } else {
+                hint.classList.add('hidden');
+            }
+        }
+
+        // ==================== UI CONTROLS ====================
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.toggle('active', t.textContent.toLowerCase().includes(tab));
+            });
+            deselectTask();
+            redrawCanvas();
+            renderTaskCards();
+            updateHintVisibility();
         }
 
         function setFilter(filter) {
             currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
+            document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
             });
-            event.target.closest('.filter-btn').classList.add('active');
-            renderTasks();
+            deselectTask();
+            redrawCanvas();
+            renderTaskCards();
         }
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-            event.target.classList.add('active');
-            document.getElementById(tab + 'Tab').classList.add('active');
-
-            renderTasks();
+        function showStatus(message) {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.textContent = message;
+            indicator.classList.add('visible');
+            setTimeout(() => indicator.classList.remove('visible'), 2000);
         }
 
-        // Click-to-write functionality
-        const paperContent = document.getElementById('paperContent');
-        const inlineInputWrapper = document.getElementById('inlineInputWrapper');
-        const inlineInput = document.getElementById('inlineTaskInput');
-
-        // Handle both click (finger/mouse) and pointerdown (Apple Pencil)
-        function activateInputAt(e) {
-            // Don't activate if clicking on existing tasks or input
-            if (e.target.closest('.task-item') || e.target.closest('.inline-input-wrapper')) {
-                return;
-            }
-
-            // If we're on completed tab and there are no tasks, show input
-            // If we're on active tab, always allow adding
-            if (currentTab === 'completed' && tasks.filter(t => t.completed).length > 0) {
-                return;
-            }
-
-            // Position the input where clicked/touched
-            const rect = paperContent.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            inlineInputWrapper.style.left = x + 'px';
-            inlineInputWrapper.style.top = y + 'px';
-            inlineInputWrapper.classList.add('active');
-            inlineInput.focus();
-            isInputActive = true;
-        }
-
-        // Handle Apple Pencil - activate immediately on pencil touch ONLY in type mode
-        paperContent.addEventListener('pointerdown', function(e) {
-            // Don't interfere with task buttons or existing tasks
-            if (e.target.closest('.task-item') || e.target.closest('.inline-input-wrapper')) {
-                return;
-            }
-
-            // Only handle Apple Pencil input (pen type) when in type mode
-            if (e.pointerType === 'pen' && inputMode === 'type') {
-                activateInputAt(e);
-            }
-        });
-
-        // Handle regular clicks (finger/mouse)
-        paperContent.addEventListener('click', function(e) {
-            // Don't interfere with task buttons or existing tasks
-            if (e.target.closest('.task-item') || e.target.closest('.inline-input-wrapper')) {
-                return;
-            }
-
-            // Only handle regular touch/mouse clicks in type mode
-            if (inputMode === 'type' && e.pointerType !== 'pen') {
-                activateInputAt(e);
-            }
-        });
-
-        function addTaskFromInline() {
-            const text = inlineInput.value.trim();
-
-            if (!text) {
-                hideInlineInput();
-                return;
-            }
-
-            const task = {
-                id: Date.now(),
-                text: text,
-                marker: selectedMarker === 'none' ? null : selectedMarker,
-                completed: false,
-                order: tasks.filter(t => !t.completed).length
-            };
-
-            tasks.push(task);
-            saveTasks();
-            renderTasks();
-
-            inlineInput.value = '';
-            hideInlineInput();
-            selectMarker('none');
-        }
-
-        function hideInlineInput() {
-            inlineInputWrapper.classList.remove('active');
-            isInputActive = false;
-        }
-
-        // Handle Enter key on inline input
-        inlineInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addTaskFromInline();
-            }
-        });
-
-        // Handle Escape key to cancel
-        inlineInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                inlineInput.value = '';
-                hideInlineInput();
-            }
-        });
-
-        // Hide input when clicking outside
-        document.addEventListener('click', function(e) {
-            if (isInputActive && !e.target.closest('.inline-input-wrapper') && !e.target.closest('.paper-content')) {
-                if (inlineInput.value.trim()) {
-                    addTaskFromInline();
-                } else {
-                    hideInlineInput();
-                }
-            }
-        });
-
-        function completeTask(id) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                task.completed = true;
-                saveTasks();
-                renderTasks();
-            }
-        }
-
-        function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            saveTasks();
-            renderTasks();
-        }
-
+        // ==================== PERSISTENCE ====================
         function saveTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+            localStorage.setItem('noteTasks', JSON.stringify(tasks));
         }
 
-        function getMarkerHTML(marker) {
-            if (!marker) return '';
-            
-            const icons = {
-                star: '<span class="marker-icon star">★</span>',
-                green: '<span class="marker-icon green"></span>',
-                red: '<span class="marker-icon red"></span>',
-                yellow: '<span class="marker-icon yellow"></span>'
-            };
-            
-            return `<div class="task-marker">${icons[marker]}</div>`;
+        function loadTasks() {
+            tasks = JSON.parse(localStorage.getItem('noteTasks')) || [];
         }
 
-        function renderTasks() {
-            const activeList = document.getElementById('taskList');
-            const completedList = document.getElementById('completedList');
-
-            // Filter active tasks
-            let activeTasks = tasks.filter(t => !t.completed);
-
-            if (currentFilter !== 'all') {
-                activeTasks = activeTasks.filter(t => t.marker === currentFilter);
-            }
-
-            activeTasks.sort((a, b) => a.order - b.order);
-
-            // Filter completed tasks
-            let completedTasks = tasks.filter(t => t.completed);
-
-            if (currentFilter !== 'all') {
-                completedTasks = completedTasks.filter(t => t.marker === currentFilter);
-            }
-
-            completedTasks.sort((a, b) => b.id - a.id);
-
-            // Update cursor style based on whether there are tasks
-            if (activeTasks.length === 0 && currentTab === 'active') {
-                paperContent.classList.remove('has-tasks');
-            } else {
-                paperContent.classList.add('has-tasks');
-            }
-
-            // Render active tasks
-            if (activeTasks.length === 0) {
-                activeList.innerHTML = '';
-            } else {
-                activeList.innerHTML = activeTasks.map(task => `
-                    <li class="task-item ${task.marker ? 'has-' + task.marker : ''}" data-id="${task.id}">
-                        <div class="drag-handle">⋮⋮</div>
-                        ${getMarkerHTML(task.marker)}
-                        <div class="task-text">${task.text}</div>
-                        <div class="task-actions">
-                            <button class="task-btn complete-btn" onclick="completeTask(${task.id})" title="Complete">✓</button>
-                            <button class="task-btn delete-btn" onclick="deleteTask(${task.id})" title="Delete">✕</button>
-                        </div>
-                    </li>
-                `).join('');
-
-                initSortable();
-            }
-
-            // Render completed tasks
-            if (completedTasks.length === 0) {
-                completedList.innerHTML = '';
-            } else {
-                completedList.innerHTML = completedTasks.map(task => `
-                    <li class="task-item ${task.marker ? 'has-' + task.marker : ''}" data-id="${task.id}">
-                        ${getMarkerHTML(task.marker)}
-                        <div class="task-text completed">${task.text}</div>
-                        <div class="task-actions">
-                            <button class="task-btn delete-btn" onclick="deleteTask(${task.id})" title="Delete">✕</button>
-                        </div>
-                    </li>
-                `).join('');
-            }
-        }
-
-        // Initialize marker selector
-        selectMarker('none');
-
-        // Initial render
-        renderTasks();
-
-        // Export tasks to JSON file
         function exportTasks() {
-            const dataStr = JSON.stringify(tasks, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-
-            const date = new Date().toISOString().split('T')[0];
-            link.download = `tasks-backup-${date}.json`;
-
-            link.click();
-            URL.revokeObjectURL(link.href);
+            const data = JSON.stringify(tasks, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tasks-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showStatus('Tasks exported!');
         }
 
-        // Import tasks from JSON file
         function importTasks(event) {
             const file = event.target.files[0];
             if (!file) return;
-
+            
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
-                    const importedTasks = JSON.parse(e.target.result);
-
-                    if (Array.isArray(importedTasks)) {
-                        // Ask user if they want to merge or replace
-                        const shouldReplace = confirm(
-                            `Import ${importedTasks.length} tasks?\n\n` +
-                            `OK = Replace all tasks\n` +
-                            `Cancel = Merge with existing tasks`
-                        );
-
-                        if (shouldReplace) {
-                            tasks = importedTasks;
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        const merge = confirm(`Import ${imported.length} tasks?\n\nOK = Replace all\nCancel = Merge`);
+                        if (merge) {
+                            tasks = imported;
                         } else {
-                            // Merge: add imported tasks with new IDs to avoid conflicts
-                            const maxId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) : 0;
-                            importedTasks.forEach((task, index) => {
-                                task.id = maxId + index + 1;
-                            });
-                            tasks = tasks.concat(importedTasks);
+                            const maxId = Math.max(0, ...tasks.map(t => t.id));
+                            imported.forEach((t, i) => t.id = maxId + i + 1);
+                            tasks = [...tasks, ...imported];
                         }
-
                         saveTasks();
-                        renderTasks();
-                        alert(`Successfully imported ${importedTasks.length} tasks!`);
-                    } else {
-                        alert('Invalid backup file format.');
+                        redrawCanvas();
+                        renderTaskCards();
+                        updateHintVisibility();
+                        showStatus(`Imported ${imported.length} tasks!`);
                     }
-                } catch (error) {
-                    alert('Error reading backup file: ' + error.message);
+                } catch (err) {
+                    alert('Error reading file: ' + err.message);
                 }
-
-                // Reset file input
-                event.target.value = '';
             };
-
             reader.readAsText(file);
+            event.target.value = '';
         }
 
-        // Canvas event listeners
-        function setupCanvasListeners() {
-            canvas.addEventListener('pointerdown', startDrawing);
-            canvas.addEventListener('pointermove', draw);
-            canvas.addEventListener('pointerup', stopDrawing);
-            canvas.addEventListener('pointerout', stopDrawing);
-
-            // Prevent context menu (copy/paste popup) when in draw mode
-            canvas.addEventListener('contextmenu', function(e) {
-                if (inputMode === 'draw') {
-                    e.preventDefault();
-                }
-            });
-
-            // Prevent text selection during drawing
-            canvas.addEventListener('selectstart', function(e) {
-                if (inputMode === 'draw') {
-                    e.preventDefault();
-                }
-            });
-
-            // Prevent selection on entire document when in draw mode
-            document.addEventListener('selectstart', function(e) {
-                if (inputMode === 'draw') {
-                    e.preventDefault();
-                }
-            });
-
-            // Prevent context menu on entire document when in draw mode
-            document.addEventListener('contextmenu', function(e) {
-                if (inputMode === 'draw') {
-                    e.preventDefault();
-                }
-            });
-
-            // Double-tap to lock current drawing
-            let lastTapTime = 0;
-            canvas.addEventListener('pointerdown', function(e) {
-                const currentTime = new Date().getTime();
-                const tapGap = currentTime - lastTapTime;
-
-                if (tapGap < 300 && tapGap > 0) {
-                    lockCurrentDrawing();
-                }
-
-                lastTapTime = currentTime;
-            });
+        function clearAllTasks() {
+            if (confirm('Delete ALL tasks? This cannot be undone.')) {
+                tasks = [];
+                saveTasks();
+                redrawCanvas();
+                renderTaskCards();
+                updateHintVisibility();
+                showStatus('All tasks cleared');
+            }
         }
 
-        // Initialize everything when page loads
-        window.addEventListener('load', function() {
-            initCanvas();
-            setupCanvasListeners();
-        });
-
-        // Redraw canvas when switching tabs
-        const originalSwitchTab = switchTab;
-        switchTab = function(tab) {
-            originalSwitchTab.call(this, tab);
-            redrawCanvas();
-        };
-
-        // Register service worker for PWA
+        // ==================== SERVICE WORKER ====================
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js');
         }
+
+        // ==================== START ====================
+        init();
     </script>
 </body>
 </html>
