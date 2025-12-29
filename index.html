@@ -310,6 +310,7 @@
         .task-card.selected {
             border-color: var(--accent);
             box-shadow: 0 2px 12px rgba(91, 142, 196, 0.3);
+            touch-action: none;
         }
 
         .task-card.dragging {
@@ -1053,12 +1054,10 @@
                 if (e.target.closest('.task-card-action')) return;
 
                 if (task.id === selectedTaskId) {
-                    // Start dragging
                     e.preventDefault();
-                    const point = { x: e.clientX, y: e.clientY };
-                    const cardRect = card.getBoundingClientRect();
-                    const paperRect = document.getElementById('paperContent').getBoundingClientRect();
+                    e.stopPropagation();
 
+                    const cardRect = card.getBoundingClientRect();
                     dragOffset = {
                         x: e.clientX - cardRect.left,
                         y: e.clientY - cardRect.top
@@ -1072,6 +1071,8 @@
             card.addEventListener('pointermove', (e) => {
                 if (isDraggingTask && task.id === selectedTaskId) {
                     e.preventDefault();
+                    e.stopPropagation();
+
                     const paperRect = document.getElementById('paperContent').getBoundingClientRect();
                     const newX = e.clientX - paperRect.left - dragOffset.x;
                     const newY = e.clientY - paperRect.top - dragOffset.y;
@@ -1085,12 +1086,26 @@
 
             card.addEventListener('pointerup', (e) => {
                 if (isDraggingTask) {
+                    e.preventDefault();
                     isDraggingTask = false;
                     card.classList.remove('dragging');
                     card.releasePointerCapture(e.pointerId);
                     saveTasks();
                 }
             });
+
+            // Prevent touch scrolling on the card when selected
+            card.addEventListener('touchstart', (e) => {
+                if (task.id === selectedTaskId && !e.target.closest('.task-card-action')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            card.addEventListener('touchmove', (e) => {
+                if (task.id === selectedTaskId) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
 
             return card;
         }
