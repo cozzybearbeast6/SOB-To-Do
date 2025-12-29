@@ -546,49 +546,6 @@
             user-select: none;
             -webkit-user-select: none;
         }
-
-        .lock-drawing-btn {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
-            width: 60px;
-            height: 60px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(91, 142, 196, 0.4);
-            cursor: pointer;
-            font-size: 24px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        .lock-drawing-btn.visible {
-            display: flex;
-        }
-
-        .lock-drawing-btn:active {
-            transform: scale(0.9);
-        }
-
-        .lock-drawing-btn:hover {
-            background: #4a7bb0;
-            box-shadow: 0 6px 16px rgba(91, 142, 196, 0.5);
-        }
-
-        @media (max-width: 600px) {
-            .lock-drawing-btn {
-                bottom: 20px;
-                right: 20px;
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -656,6 +613,9 @@
                 <button class="filter-btn" id="drawMode" onclick="setInputMode('draw')" title="Draw mode">
                     ✏️
                 </button>
+                <button class="filter-btn" id="lockBtn" onclick="lockCurrentDrawing()" title="Lock drawing" style="display: none;">
+                    🔒
+                </button>
             </div>
 
             <div class="toolbar-divider"></div>
@@ -697,11 +657,6 @@
                 <ul id="completedList" class="task-list"></ul>
             </div>
         </div>
-
-        <!-- Lock drawing button (appears when drawing) -->
-        <button class="lock-drawing-btn" id="lockBtn" onclick="lockCurrentDrawing()" title="Lock task (or double-tap)">
-            🔒
-        </button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -758,7 +713,7 @@
             } else {
                 canvas.style.pointerEvents = 'none';
                 paperContent.classList.remove('draw-mode');
-                document.getElementById('lockBtn').classList.remove('visible');
+                document.getElementById('lockBtn').style.display = 'none';
             }
         }
 
@@ -843,7 +798,7 @@
             // Show lock button if there are strokes
             const lockBtn = document.getElementById('lockBtn');
             if (currentStrokes.length > 0 && inputMode === 'draw') {
-                lockBtn.classList.add('visible');
+                lockBtn.style.display = 'flex';
             }
         }
 
@@ -870,7 +825,7 @@
             selectMarker('none');
 
             // Hide lock button
-            document.getElementById('lockBtn').classList.remove('visible');
+            document.getElementById('lockBtn').style.display = 'none';
         }
 
         function calculateBounds(strokes) {
