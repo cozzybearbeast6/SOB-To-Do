@@ -539,6 +539,10 @@
             cursor: crosshair;
         }
 
+        #drawingCanvas {
+            touch-action: none;
+        }
+
         .lock-drawing-btn {
             position: fixed;
             bottom: 40px;
@@ -766,6 +770,7 @@
         function startDrawing(e) {
             if (inputMode !== 'draw') return;
 
+            e.preventDefault();
             const point = getCanvasPoint(e);
 
             // Check if clicking on a locked task to drag it
@@ -790,6 +795,7 @@
 
         function draw(e) {
             if (isDraggingTask && selectedTask) {
+                e.preventDefault();
                 const point = getCanvasPoint(e);
                 selectedTask.bounds.x = point.x - dragOffset.x;
                 selectedTask.bounds.y = point.y - dragOffset.y;
@@ -799,6 +805,7 @@
 
             if (!isDrawing || inputMode !== 'draw') return;
 
+            e.preventDefault();
             const point = getCanvasPoint(e);
             const currentStroke = currentStrokes[currentStrokes.length - 1];
             currentStroke.points.push(point);
