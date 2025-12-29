@@ -292,6 +292,16 @@
             margin: 0 4px;
         }
 
+        /* Task cards container - same positioning as canvas */
+        #taskCardsContainer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
         /* Task cards (locked handwritten tasks) */
         .task-card {
             position: absolute;
@@ -301,6 +311,7 @@
             transition: box-shadow 0.2s, border-color 0.2s;
             background: rgba(255, 255, 255, 0.3);
             z-index: 60;
+            pointer-events: auto;
         }
 
         .task-card:hover {
@@ -325,16 +336,18 @@
         /* Task card marker indicator */
         .task-card-marker {
             position: absolute;
-            left: -8px;
+            left: -24px;
             top: 50%;
             transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         /* Task card actions (shown when selected) */
@@ -778,7 +791,7 @@
                 });
             });
             
-            const padding = 10;
+            const padding = 15;
             return {
                 x: minX - padding,
                 y: minY - padding,
