@@ -520,8 +520,8 @@
 
             <!-- Hint text -->
             <div class="hint-text" id="hintText">
-                ✏️ Use Apple Pencil to write a task<br>
-                <small>Tap anywhere with finger to type instead</small>
+                Write with Apple Pencil, then tap to save<br>
+                <small>Or tap anywhere with finger to type</small>
             </div>
 
             <!-- Task cards container -->
@@ -694,18 +694,22 @@
         function handlePaperClick(e) {
             // Only handle finger/mouse clicks (not pen)
             if (e.pointerType === 'pen') return;
-            
+
             // Don't trigger if clicking on task cards or toolbar
-            if (e.target.closest('.task-card') || 
+            if (e.target.closest('.task-card') ||
                 e.target.closest('.drawing-toolbar') ||
                 e.target.closest('#mainToolbar') ||
                 e.target.closest('.task-card-actions')) {
                 return;
             }
-            
-            // If there's an active drawing, don't open type input
-            if (currentStrokes.length > 0) return;
-            
+
+            // If there's an active drawing, show the toolbar to finalize it
+            if (currentStrokes.length > 0 && hasValidStrokes()) {
+                drawingBounds = calculateBounds(currentStrokes);
+                showDrawingToolbar();
+                return;
+            }
+
             // Show prompt for typed task
             const text = prompt('Enter task:');
             if (text && text.trim()) {
@@ -766,12 +770,9 @@
         function stopDrawing() {
             if (!isDrawing) return;
             isDrawing = false;
-            
-            // If we have strokes, show the toolbar
-            if (currentStrokes.length > 0 && hasValidStrokes()) {
-                drawingBounds = calculateBounds(currentStrokes);
-                showDrawingToolbar();
-            }
+
+            // Just stop drawing - don't show toolbar automatically
+            // User will tap with finger to bring up toolbar when ready
         }
 
         function hasValidStrokes() {
@@ -1066,22 +1067,32 @@
             }
             
             // Actions (visible when selected)
+            const actions = document.createElement('div');
+            actions.className = 'task-card-actions';
+
             if (!task.completed) {
-                const actions = document.createElement('div');
-                actions.className = 'task-card-actions';
-                actions.innerHTML = `
-                    <button class="task-card-action complete" onclick="event.stopPropagation(); completeTask(${task.id})" title="Complete">✓</button>
-                    <button class="task-card-action delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete">✕</button>
-                `;
-                card.appendChild(actions);
-            } else {
-                const actions = document.createElement('div');
-                actions.className = 'task-card-actions';
-                actions.innerHTML = `
-                    <button class="task-card-action delete" onclick="event.stopPropagation(); deleteTask(${task.id})" title="Delete">✕</button>
-                `;
-                card.appendChild(actions);
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'task-card-action complete';
+                completeBtn.title = 'Complete';
+                completeBtn.textContent = '✓';
+                completeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    completeTask(task.id);
+                });
+                actions.appendChild(completeBtn);
             }
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'task-card-action delete';
+            deleteBtn.title = 'Delete';
+            deleteBtn.textContent = '✕';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteTask(task.id);
+            });
+            actions.appendChild(deleteBtn);
+
+            card.appendChild(actions);
             
             // Click to select
             card.addEventListener('click', (e) => {
