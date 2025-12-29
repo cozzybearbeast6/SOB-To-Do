@@ -537,10 +537,14 @@
         /* Drawing mode styles */
         .paper-content.draw-mode {
             cursor: crosshair;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #drawingCanvas {
             touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .lock-drawing-btn {
@@ -1316,6 +1320,20 @@
             canvas.addEventListener('pointermove', draw);
             canvas.addEventListener('pointerup', stopDrawing);
             canvas.addEventListener('pointerout', stopDrawing);
+
+            // Prevent context menu (copy/paste popup) when in draw mode
+            canvas.addEventListener('contextmenu', function(e) {
+                if (inputMode === 'draw') {
+                    e.preventDefault();
+                }
+            });
+
+            // Prevent text selection during drawing
+            canvas.addEventListener('selectstart', function(e) {
+                if (inputMode === 'draw') {
+                    e.preventDefault();
+                }
+            });
 
             // Double-tap to lock current drawing
             let lastTapTime = 0;
