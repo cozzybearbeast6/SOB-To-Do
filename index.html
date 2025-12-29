@@ -631,24 +631,24 @@
         // ==================== POINTER HANDLING ====================
         function handlePointerDown(e) {
             const point = getCanvasPoint(e);
-            
+
             // Check if clicking on a task card first
             const clickedTask = findTaskAtPoint(point.x, point.y);
-            
+
             if (e.pointerType === 'pen') {
-                // Pen input - start drawing or interact with task
+                // Pen input - start or continue drawing
                 isPenActive = true;
-                
+
                 if (clickedTask && clickedTask.id === selectedTaskId) {
                     // Drag selected task
                     startDraggingTask(clickedTask, point);
-                } else if (currentStrokes.length === 0) {
-                    // Start new drawing
+                } else {
+                    // Start or continue drawing - hide toolbar if it was showing
                     hideDrawingToolbar();
                     deselectTask();
                     startDrawing(point);
                 }
-                
+
                 e.preventDefault();
             } else if (e.pointerType === 'touch' || e.pointerType === 'mouse') {
                 // Finger/mouse - interact with tasks
