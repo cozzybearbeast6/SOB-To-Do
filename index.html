@@ -632,6 +632,14 @@
 
         // ==================== POINTER HANDLING ====================
         function handlePointerDown(e) {
+            // Check if clicking on action buttons or toolbar - let those handle themselves
+            const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
+            if (elementAtPoint && (
+                elementAtPoint.closest('.task-card-action') ||
+                elementAtPoint.closest('.drawing-toolbar'))) {
+                return; // Don't interfere with button clicks
+            }
+
             const point = getCanvasPoint(e);
 
             // Check if clicking on a task card first
