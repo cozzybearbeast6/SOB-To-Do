@@ -692,14 +692,12 @@
         }
 
         function handlePaperClick(e) {
-            // Only handle finger/mouse clicks (not pen)
-            if (e.pointerType === 'pen') return;
-
-            // Don't trigger if clicking on task cards or toolbar
+            // Don't trigger if clicking on task cards, their actions, or toolbars
             if (e.target.closest('.task-card') ||
+                e.target.closest('.task-card-action') ||
+                e.target.closest('.task-card-actions') ||
                 e.target.closest('.drawing-toolbar') ||
-                e.target.closest('#mainToolbar') ||
-                e.target.closest('.task-card-actions')) {
+                e.target.closest('#mainToolbar')) {
                 return;
             }
 
