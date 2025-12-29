@@ -710,9 +710,13 @@
             if (mode === 'draw') {
                 canvas.style.pointerEvents = 'auto';
                 paperContent.classList.add('draw-mode');
+                // Prevent any selection/interaction on paper content in draw mode
+                paperContent.style.pointerEvents = 'none';
+                canvas.style.pointerEvents = 'auto';
             } else {
                 canvas.style.pointerEvents = 'none';
                 paperContent.classList.remove('draw-mode');
+                paperContent.style.pointerEvents = 'auto';
                 document.getElementById('lockBtn').style.display = 'none';
             }
         }
@@ -1285,6 +1289,20 @@
 
             // Prevent text selection during drawing
             canvas.addEventListener('selectstart', function(e) {
+                if (inputMode === 'draw') {
+                    e.preventDefault();
+                }
+            });
+
+            // Prevent selection on entire document when in draw mode
+            document.addEventListener('selectstart', function(e) {
+                if (inputMode === 'draw') {
+                    e.preventDefault();
+                }
+            });
+
+            // Prevent context menu on entire document when in draw mode
+            document.addEventListener('contextmenu', function(e) {
                 if (inputMode === 'draw') {
                     e.preventDefault();
                 }
